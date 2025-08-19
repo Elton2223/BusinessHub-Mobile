@@ -148,15 +148,13 @@ class _HomePageState extends State<HomePage> {
                      Container(
                        width: double.infinity,
                        height: 200,
-                       decoration: BoxDecoration(
-                         borderRadius: BorderRadius.circular(25),
-                         image: DecorationImage(
-                           fit: BoxFit.cover,
-                           image: NetworkImage(
-                             'https://images.unsplash.com/photo-1476842634003-7dcca8f832de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwyNHx8ZGFya3xlbnwwfHx8fDE3NTIwMDY3Njl8MA&ixlib=rb-4.1.0&q=80&w=1080',
-                           ),
-                         ),
-                       ),
+                                               decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          image: DecorationImage(
+                            fit: BoxFit.cover,
+                            image: AssetImage('images/splash.jpeg'),
+                          ),
+                        ),
                        child: Container(
                          decoration: BoxDecoration(
                            borderRadius: BorderRadius.circular(25),
@@ -193,8 +191,8 @@ class _HomePageState extends State<HomePage> {
                                  ),
                                ),
                                SizedBox(height: 16),
-                               InkWell(
-                                 onTap: () => Navigator.pushNamed(context, '/review'),
+                                                               InkWell(
+                                  onTap: () => Navigator.pushNamed(context, '/hub-list'),
                                  child: Container(
                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                    decoration: BoxDecoration(

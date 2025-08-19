@@ -4,6 +4,7 @@ import 'userManagement/verify_email.dart';
 import 'userManagement/login.dart';
 import 'demo_screen.dart';
 import 'home_page.dart';
+import 'hubs/hub_list.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterWidget(),
         '/demo': (context) => const DemoScreen(),
         '/home': (context) => const HomePage(),
+        '/hub-list': (context) => const HubListPage(),
       },
     );
   }
