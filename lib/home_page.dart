@@ -174,7 +174,7 @@ class _HomePageState extends State<HomePage> {
                              mainAxisAlignment: MainAxisAlignment.center,
                              children: [
                                Text(
-                                 'Welcome "name"',
+                                 'Welcome Khethani',
                                  style: GoogleFonts.readexPro(
                                    color: Colors.white,
                                    fontSize: 28,
