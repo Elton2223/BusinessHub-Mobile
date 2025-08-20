@@ -2,11 +2,24 @@ import 'package:flutter/material.dart';
 import 'userManagement/register.dart';
 import 'userManagement/verify_email.dart';
 import 'userManagement/login.dart';
-import 'demo_screen.dart';
 import 'home_page.dart';
 import 'hubs/hub_list.dart';
+import 'hubs/hub_apply.dart';
+import 'config/env_config.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize environment configuration
+  await EnvConfig.initialize();
+  
+  // Debug environment variables (remove in production)
+  if (EnvConfig.debugMode) {
+    print('Environment: ${EnvConfig.environment}');
+    print('API Base URL: ${EnvConfig.apiBaseUrl}');
+    print('App Name: ${EnvConfig.appName}');
+  }
+  
   runApp(const MyApp());
 }
 
@@ -26,14 +39,14 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'GoogleFonts.poppins',
       ),
-      home: const DemoScreen(),
+      home: const LoginWidget(),
       routes: {
         '/verify_email': (context) => const VerifyEmailScreen(),
         '/login': (context) => const LoginWidget(),
         '/register': (context) => const RegisterWidget(),
-        '/demo': (context) => const DemoScreen(),
         '/home': (context) => const HomePage(),
         '/hub-list': (context) => const HubListPage(),
+        '/hub-apply': (context) => const HubApplyPage(),
       },
     );
   }
