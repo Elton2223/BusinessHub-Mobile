@@ -148,15 +148,13 @@ class _HomePageState extends State<HomePage> {
                      Container(
                        width: double.infinity,
                        height: 200,
-                       decoration: BoxDecoration(
-                         borderRadius: BorderRadius.circular(25),
-                         image: DecorationImage(
-                           fit: BoxFit.cover,
-                           image: NetworkImage(
-                             'https://images.unsplash.com/photo-1476842634003-7dcca8f832de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwyNHx8ZGFya3xlbnwwfHx8fDE3NTIwMDY3Njl8MA&ixlib=rb-4.1.0&q=80&w=1080',
-                           ),
-                         ),
-                       ),
+                                               decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          image: DecorationImage(
+                            fit: BoxFit.cover,
+                            image: AssetImage('images/splash.jpeg'),
+                          ),
+                        ),
                        child: Container(
                          decoration: BoxDecoration(
                            borderRadius: BorderRadius.circular(25),
@@ -176,7 +174,7 @@ class _HomePageState extends State<HomePage> {
                              mainAxisAlignment: MainAxisAlignment.center,
                              children: [
                                Text(
-                                 'Welcome "name"',
+                                 'Welcome Khethani',
                                  style: GoogleFonts.readexPro(
                                    color: Colors.white,
                                    fontSize: 28,
@@ -193,8 +191,8 @@ class _HomePageState extends State<HomePage> {
                                  ),
                                ),
                                SizedBox(height: 16),
-                               InkWell(
-                                 onTap: () => Navigator.pushNamed(context, '/review'),
+                                                               InkWell(
+                                  onTap: () => Navigator.pushNamed(context, '/hub-list'),
                                  child: Container(
                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                    decoration: BoxDecoration(
@@ -230,12 +228,15 @@ class _HomePageState extends State<HomePage> {
                              fontWeight: FontWeight.bold,
                            ),
                          ),
-                         Text(
-                           'See more',
-                           style: GoogleFonts.poppins(
-                             color: Color(0xFF111111),
-                             fontSize: 16,
-                             fontWeight: FontWeight.w600,
+                         InkWell(
+                           onTap: () => Navigator.pushNamed(context, '/hub-apply'),
+                           child: Text(
+                             'See more',
+                             style: GoogleFonts.poppins(
+                               color: Color(0xFF667eea),
+                               fontSize: 16,
+                               fontWeight: FontWeight.w600,
+                             ),
                            ),
                          ),
                        ],
@@ -257,44 +258,52 @@ class _HomePageState extends State<HomePage> {
                      SizedBox(height: 25),
                      Divider(),
                      SizedBox(height: 15),
-                     Text(
-                       'What\'s In The Hub',
-                       style: GoogleFonts.poppins(
-                         color: Color(0xFF111111),
-                         fontSize: 18,
-                         fontWeight: FontWeight.bold,
-                       ),
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         Text(
+                           'What\'s In The Hub',
+                           style: GoogleFonts.poppins(
+                             color: Color(0xFF111111),
+                             fontSize: 18,
+                             fontWeight: FontWeight.bold,
+                           ),
+                         ),
+                         InkWell(
+                           onTap: () => Navigator.pushNamed(context, '/hub-apply'),
+                           child: Text(
+                             'See more',
+                             style: GoogleFonts.poppins(
+                               color: Color(0xFF667eea),
+                               fontSize: 16,
+                               fontWeight: FontWeight.w600,
+                             ),
+                           ),
+                         ),
+                       ],
                      ),
                      SizedBox(height: 15),
-                     // Hub Information Cards
-                     Column(
+                     // Hub Information Cards - New Design
+                     Row(
                        children: [
-                         _buildInfoCard(
-                           'Total Active Hubs',
-                           '24',
-                           Icons.business,
-                           Color(0xFF06C698),
+                         Expanded(
+                           child: _buildHubInfoCard(
+                             'Review Requests',
+                             'Review Requests You Made To Other Hubs',
+                             'View',
+                             Color(0xFFFF9800), // Orange border
+                             true, // Left border
+                           ),
                          ),
-                         SizedBox(height: 12),
-                         _buildInfoCard(
-                           'Available Jobs',
-                           '156',
-                           Icons.work,
-                           Color(0xFF2196F3),
-                         ),
-                         SizedBox(height: 12),
-                         _buildInfoCard(
-                           'Active Users',
-                           '1,234',
-                           Icons.people,
-                           Color(0xFFFF9800),
-                         ),
-                         SizedBox(height: 12),
-                         _buildInfoCard(
-                           'Total Earnings',
-                           'R45,678',
-                           Icons.attach_money,
-                           Color(0xFF4CAF50),
+                         SizedBox(width: 15),
+                         Expanded(
+                           child: _buildHubInfoCard(
+                             'Review Requests',
+                             'Review Requests You Made To Other Hubs',
+                             'View',
+                             Color(0xFF87CEEB), // Light blue border
+                             false, // Right border
+                           ),
                          ),
                        ],
                      ),
@@ -469,6 +478,125 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHubInfoCard(String title, String subtitle, String buttonText, Color borderColor, bool isLeftBorder) {
+    return InkWell(
+      onTap: () {
+        // Navigate to review requests page
+        Navigator.pushNamed(context, '/review-requests');
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Color(0xFFE0E0E0)),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 2,
+              color: Color(0x0A000000),
+              offset: Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Stack(
+        children: [
+          // Colored border overlay
+          Positioned(
+            left: isLeftBorder ? 0 : null,
+            right: isLeftBorder ? null : 0,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: borderColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: isLeftBorder ? Radius.circular(12) : Radius.zero,
+                  bottomLeft: isLeftBorder ? Radius.circular(12) : Radius.zero,
+                  topRight: isLeftBorder ? Radius.zero : Radius.circular(12),
+                  bottomRight: isLeftBorder ? Radius.zero : Radius.circular(12),
+                ),
+              ),
+            ),
+                    ),
+          // Main content
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top image section
+              Container(
+                height: 120,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                  image: DecorationImage(
+                    image: AssetImage('images/splash.jpeg'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              // Content section
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.poppins(
+                        color: Color(0xFF111111),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.poppins(
+                        color: Color(0xFF666666),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // View button
+                    InkWell(
+                      onTap: () {
+                        // Navigate to review requests page
+                        Navigator.pushNamed(context, '/review-requests');
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Color(0xFFE0E0E0)),
+                        ),
+                        child: Text(
+                          buttonText,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            color: Color(0xFF111111),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       ),
     );
   }
