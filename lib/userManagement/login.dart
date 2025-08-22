@@ -5,6 +5,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/auth_manager.dart';
+import '../../services/auth_service.dart';
 import 'login_model.dart';
 export 'login_model.dart';
 
@@ -39,6 +40,71 @@ class _LoginWidgetState extends State<LoginWidget> {
   void dispose() {
     _model.dispose();
     super.dispose();
+  }
+
+  // Handle login with API
+  Future<void> _handleLogin() async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(
+              color: Colors.white,
+            ),
+          );
+        },
+      );
+
+      // Test connection first
+      final isConnected = await AuthService.testConnection();
+      if (!isConnected) {
+        Navigator.of(context).pop(); // Hide loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to connect to server. Please check your internet connection and try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Call login API
+      final result = await AuthService.login(
+        _model.textController1!.text.trim(),
+        _model.textController2!.text,
+      );
+
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      // Update local auth manager
+      AuthManager.signIn(_model.textController1!.text.trim());
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login successful!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Navigate to home page
+      Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -184,10 +250,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                     FFButtonWidget(
                       onPressed: () async {
                         if (_model.formKey.currentState?.validate() ?? false) {
-                          // Sign in logic
-                          AuthManager.signIn(_model.textController1!.text);
-                          // Navigate to home page
-                          Navigator.pushNamed(context, '/home');
+                          _handleLogin();
                         }
                       },
                       text: 'Sign In',
@@ -355,10 +418,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                       FFButtonWidget(
                         onPressed: () async {
                           if (_model.formKey.currentState?.validate() ?? false) {
-                            // Sign in logic
-                            AuthManager.signIn(_model.textController1!.text);
-                            // Navigate to home page
-                            Navigator.pushNamed(context, '/home');
+                            _handleLogin();
                           }
                         },
                         text: 'Sign In',

@@ -5,6 +5,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/auth_manager.dart';
+import '../../services/auth_service.dart';
 import 'register_model.dart';
 export 'register_model.dart';
 
@@ -45,6 +46,60 @@ class _RegisterWidgetState extends State<RegisterWidget> {
   void dispose() {
     _model.dispose();
     super.dispose();
+  }
+
+  // Handle registration with API
+  Future<void> _handleRegister() async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(
+              color: Colors.white,
+            ),
+          );
+        },
+      );
+
+             // Call register API
+       final result = await AuthService.register(
+         email: _model.textController3!.text.trim(),
+         password: _model.textController5!.text,
+         name: _model.textController1!.text.trim(),
+         surname: _model.textController2!.text.trim(),
+         phone: _model.textController4!.text.trim().isNotEmpty 
+           ? _model.textController4!.text.trim() 
+           : null,
+       );
+
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registration successful! Please check your email for verification.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Navigate to login page
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -160,75 +215,68 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 32 : 20, 0, isTablet ? 16 : 12),
-                      child: _buildTextField(
-                        controller: _model.textController1,
-                        focusNode: _model.textFieldFocusNode1,
-                        label: 'Full Name',
-                        hint: 'Enter your full name',
-                        validator: _model.textController1Validator,
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
-                      child: _buildTextField(
-                        controller: _model.textController2,
-                        focusNode: _model.textFieldFocusNode2,
-                        label: 'Email',
-                        hint: 'Enter your email',
-                        keyboardType: TextInputType.emailAddress,
-                        validator: _model.textController2Validator,
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
-                      child: _buildTextField(
-                        controller: _model.textController3,
-                        focusNode: _model.textFieldFocusNode3,
-                        label: 'Phone Number',
-                        hint: 'Enter your phone number',
-                        keyboardType: TextInputType.phone,
-                        validator: _model.textController3Validator,
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
-                      child: _buildPasswordField(
-                        controller: _model.textController4,
-                        focusNode: _model.textFieldFocusNode4,
-                        label: 'Password',
-                        hint: 'Enter your password',
-                        validator: _model.textController4Validator,
-                        isVisible: _model.passwordVisibility1,
-                        onVisibilityChanged: (value) {
-                          setState(() {
-                            _model.passwordVisibility1 = value;
-                          });
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 32 : 24),
-                      child: _buildPasswordField(
-                        controller: _model.textController5,
-                        focusNode: _model.textFieldFocusNode5,
-                        label: 'Confirm Password',
-                        hint: 'Confirm your password',
-                        validator: _model.textController5Validator,
-                        isVisible: _model.passwordVisibility2,
-                        onVisibilityChanged: (value) {
-                          setState(() {
-                            _model.passwordVisibility2 = value;
-                          });
-                        },
-                      ),
-                    ),
+                                         Padding(
+                       padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 32 : 20, 0, isTablet ? 16 : 12),
+                       child: _buildTextField(
+                         controller: _model.textController1,
+                         focusNode: _model.textFieldFocusNode1,
+                         label: 'Name',
+                         hint: 'Enter your name',
+                         validator: _model.textController1Validator,
+                       ),
+                     ),
+                     Padding(
+                       padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
+                       child: _buildTextField(
+                         controller: _model.textController2,
+                         focusNode: _model.textFieldFocusNode2,
+                         label: 'Surname',
+                         hint: 'Enter your surname',
+                         validator: _model.textController2Validator,
+                       ),
+                     ),
+                     Padding(
+                       padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
+                       child: _buildTextField(
+                         controller: _model.textController3,
+                         focusNode: _model.textFieldFocusNode3,
+                         label: 'Email',
+                         hint: 'Enter your email',
+                         keyboardType: TextInputType.emailAddress,
+                         validator: _model.textController3Validator,
+                       ),
+                     ),
+                     Padding(
+                       padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
+                       child: _buildTextField(
+                         controller: _model.textController4,
+                         focusNode: _model.textFieldFocusNode4,
+                         label: 'Phone Number',
+                         hint: 'Enter your phone number',
+                         keyboardType: TextInputType.phone,
+                         validator: _model.textController4Validator,
+                       ),
+                     ),
+                     Padding(
+                       padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
+                       child: _buildPasswordField(
+                         controller: _model.textController5,
+                         focusNode: _model.textFieldFocusNode5,
+                         label: 'Password',
+                         hint: 'Enter your password',
+                         validator: _model.textController5Validator,
+                         isVisible: _model.passwordVisibility1,
+                         onVisibilityChanged: (value) {
+                           setState(() {
+                             _model.passwordVisibility1 = value;
+                           });
+                         },
+                       ),
+                     ),
                     FFButtonWidget(
                       onPressed: () async {
                         if (_model.formKey.currentState?.validate() ?? false) {
-                          // Navigate to verify email
-                          Navigator.pushNamed(context, '/verify_email');
+                          _handleRegister();
                         }
                       },
                       text: 'Create Account',
@@ -370,59 +418,53 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildTextField(
-                        controller: _model.textController1,
-                        focusNode: _model.textFieldFocusNode1,
-                        label: 'Full Name',
-                        hint: 'Enter your full name',
-                        validator: _model.textController1Validator,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _model.textController2,
-                        focusNode: _model.textFieldFocusNode2,
-                        label: 'Email',
-                        hint: 'Enter your email',
-                        keyboardType: TextInputType.emailAddress,
-                        validator: _model.textController2Validator,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _model.textController3,
-                        focusNode: _model.textFieldFocusNode3,
-                        label: 'Phone Number',
-                        hint: 'Enter your phone number',
-                        keyboardType: TextInputType.phone,
-                        validator: _model.textController3Validator,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildPasswordField(
-                        controller: _model.textController4,
-                        focusNode: _model.textFieldFocusNode4,
-                        label: 'Password',
-                        hint: 'Enter your password',
-                        validator: _model.textController4Validator,
-                        isVisible: _model.passwordVisibility1,
-                        onVisibilityChanged: (value) {
-                          setState(() {
-                            _model.passwordVisibility1 = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      _buildPasswordField(
-                        controller: _model.textController5,
-                        focusNode: _model.textFieldFocusNode5,
-                        label: 'Confirm Password',
-                        hint: 'Confirm your password',
-                        validator: _model.textController5Validator,
-                        isVisible: _model.passwordVisibility2,
-                        onVisibilityChanged: (value) {
-                          setState(() {
-                            _model.passwordVisibility2 = value;
-                          });
-                        },
-                      ),
+                                             _buildTextField(
+                         controller: _model.textController1,
+                         focusNode: _model.textFieldFocusNode1,
+                         label: 'Name',
+                         hint: 'Enter your name',
+                         validator: _model.textController1Validator,
+                       ),
+                       const SizedBox(height: 16),
+                       _buildTextField(
+                         controller: _model.textController2,
+                         focusNode: _model.textFieldFocusNode2,
+                         label: 'Surname',
+                         hint: 'Enter your surname',
+                         validator: _model.textController2Validator,
+                       ),
+                       const SizedBox(height: 16),
+                       _buildTextField(
+                         controller: _model.textController3,
+                         focusNode: _model.textFieldFocusNode3,
+                         label: 'Email',
+                         hint: 'Enter your email',
+                         keyboardType: TextInputType.emailAddress,
+                         validator: _model.textController3Validator,
+                       ),
+                       const SizedBox(height: 16),
+                       _buildTextField(
+                         controller: _model.textController4,
+                         focusNode: _model.textFieldFocusNode4,
+                         label: 'Phone Number',
+                         hint: 'Enter your phone number',
+                         keyboardType: TextInputType.phone,
+                         validator: _model.textController4Validator,
+                       ),
+                       const SizedBox(height: 16),
+                       _buildPasswordField(
+                         controller: _model.textController5,
+                         focusNode: _model.textFieldFocusNode5,
+                         label: 'Password',
+                         hint: 'Enter your password',
+                         validator: _model.textController5Validator,
+                         isVisible: _model.passwordVisibility1,
+                         onVisibilityChanged: (value) {
+                           setState(() {
+                             _model.passwordVisibility1 = value;
+                           });
+                         },
+                       ),
                       const SizedBox(height: 30),
                       FFButtonWidget(
                         onPressed: () async {
