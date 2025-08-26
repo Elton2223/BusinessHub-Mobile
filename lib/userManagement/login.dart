@@ -420,8 +420,8 @@ class _LoginWidgetState extends State<LoginWidget> {
                                           if (success) {
                                             // Sign in with AuthManager for compatibility
                                             AuthManager.signIn(_model.textController1!.text);
-                                            // Navigate to home page
-                                            Navigator.pushNamed(context, '/home');
+                                            // Navigate to profile page
+                                            Navigator.pushReplacementNamed(context, '/profile');
                                           }
                                         }
                                       },
