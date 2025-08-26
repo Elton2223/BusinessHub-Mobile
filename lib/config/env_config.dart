@@ -60,7 +60,7 @@ class EnvConfig {
   }
 
   // API Configuration
-  static String get apiBaseUrl => get('API_BASE_URL', defaultValue: 'https://api.businesshub.com');
+  static String get apiBaseUrl => get('API_BASE_URL', defaultValue: 'http://192.168.187.231:3005');
   static String get apiVersion => get('API_VERSION', defaultValue: 'v1');
   static String get apiAuthEndpoint => get('API_AUTH_ENDPOINT', defaultValue: '/auth');
   static String get apiUsersEndpoint => get('API_USERS_ENDPOINT', defaultValue: '/users');

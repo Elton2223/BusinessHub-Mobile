@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'userManagement/register.dart';
 import 'userManagement/verify_email.dart';
 import 'userManagement/login.dart';
+import 'userManagement/profile_screen.dart';
 import 'home_page.dart';
 import 'hubs/hub_list.dart';
 import 'hubs/hub_apply.dart';
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
           '/verify_email': (context) => const VerifyEmailScreen(),
           '/login': (context) => const LoginWidget(),
           '/register': (context) => const RegisterWidget(),
+          '/profile': (context) => const ProfileScreen(),
           '/home': (context) => const HomePage(),
           '/hub-list': (context) => const HubListPage(),
           '/hub-apply': (context) => const HubApplyPage(),
