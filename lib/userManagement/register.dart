@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:flutter/gestures.dart';
+import 'package:provider/provider.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/auth_manager.dart';
+import '../providers/auth_provider.dart';
 import 'register_model.dart';
 export 'register_model.dart';
 
@@ -37,6 +39,8 @@ class _RegisterWidgetState extends State<RegisterWidget> {
     _model.textFieldFocusNode4 ??= FocusNode();
     _model.textController5 ??= TextEditingController();
     _model.textFieldFocusNode5 ??= FocusNode();
+    _model.textController6 ??= TextEditingController();
+    _model.textFieldFocusNode6 ??= FocusNode();
 
     WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
@@ -160,16 +164,26 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 32 : 20, 0, isTablet ? 16 : 12),
-                      child: _buildTextField(
-                        controller: _model.textController1,
-                        focusNode: _model.textFieldFocusNode1,
-                        label: 'Full Name',
-                        hint: 'Enter your full name',
-                        validator: _model.textController1Validator,
-                      ),
-                    ),
+                                         Padding(
+                       padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 32 : 20, 0, isTablet ? 16 : 12),
+                       child: _buildTextField(
+                         controller: _model.textController1,
+                         focusNode: _model.textFieldFocusNode1,
+                         label: 'Name',
+                         hint: 'Enter your name',
+                         validator: _model.textController1Validator,
+                       ),
+                     ),
+                     Padding(
+                       padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
+                       child: _buildTextField(
+                         controller: _model.textController6,
+                         focusNode: _model.textFieldFocusNode6,
+                         label: 'Surname',
+                         hint: 'Enter your surname',
+                         validator: _model.textController6Validator,
+                       ),
+                     ),
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
                       child: _buildTextField(
@@ -224,23 +238,64 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                         },
                       ),
                     ),
-                    FFButtonWidget(
-                      onPressed: () async {
-                        if (_model.formKey.currentState?.validate() ?? false) {
-                          // Navigate to verify email
-                          Navigator.pushNamed(context, '/verify_email');
-                        }
+                    Consumer<AuthProvider>(
+                      builder: (context, authProvider, child) {
+                        return Column(
+                          children: [
+                            if (authProvider.errorMessage != null)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                ),
+                                child: Text(
+                                  authProvider.errorMessage!,
+                                  style: const TextStyle(color: Colors.red),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            FFButtonWidget(
+                              onPressed: authProvider.isLoading
+                                  ? null
+                                  : () async {
+                                      if (_model.formKey.currentState?.validate() ?? false) {
+                                                                                 final success = await authProvider.register(
+                                           name: _model.textController1!.text,
+                                           surname: _model.textController6!.text,
+                                           email: _model.textController2!.text,
+                                           phoneNumber: int.tryParse(_model.textController3!.text) ?? 0,
+                                           password: _model.textController4!.text,
+                                         );
+                                        
+                                        if (success) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Registration successful! Please login.'),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                          Navigator.pushNamed(context, '/login');
+                                        }
+                                      }
+                                    },
+                              text: authProvider.isLoading ? 'Creating Account...' : 'Create Account',
+                              options: FFButtonOptions(
+                                width: double.infinity,
+                                height: isTablet ? 60 : 50,
+                                color: authProvider.isLoading ? Colors.grey : Colors.white,
+                                textColor: const Color(0xFF667eea),
+                                borderColor: Colors.transparent,
+                                borderWidth: 1,
+                                borderRadius: isTablet ? 30 : 25,
+                              ),
+                            ),
+                          ],
+                        );
                       },
-                      text: 'Create Account',
-                      options: FFButtonOptions(
-                        width: double.infinity,
-                        height: isTablet ? 60 : 50,
-                        color: Colors.white,
-                        textColor: const Color(0xFF667eea),
-                        borderColor: Colors.transparent,
-                        borderWidth: 1,
-                        borderRadius: isTablet ? 30 : 25,
-                      ),
                     ),
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 32 : 20, 0, 0),
@@ -370,13 +425,21 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildTextField(
-                        controller: _model.textController1,
-                        focusNode: _model.textFieldFocusNode1,
-                        label: 'Full Name',
-                        hint: 'Enter your full name',
-                        validator: _model.textController1Validator,
-                      ),
+                                             _buildTextField(
+                         controller: _model.textController1,
+                         focusNode: _model.textFieldFocusNode1,
+                         label: 'Name',
+                         hint: 'Enter your name',
+                         validator: _model.textController1Validator,
+                       ),
+                       const SizedBox(height: 16),
+                       _buildTextField(
+                         controller: _model.textController6,
+                         focusNode: _model.textFieldFocusNode6,
+                         label: 'Surname',
+                         hint: 'Enter your surname',
+                         validator: _model.textController6Validator,
+                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         controller: _model.textController2,
@@ -424,24 +487,76 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                         },
                       ),
                       const SizedBox(height: 30),
-                      FFButtonWidget(
-                        onPressed: () async {
-                          if (_model.formKey.currentState?.validate() ?? false) {
-                            // Navigate to verify email
-                            Navigator.pushNamed(context, '/verify_email');
-                          }
-                        },
-                        text: 'Create Account',
-                        options: FFButtonOptions(
-                          width: double.infinity,
-                          height: 50,
-                          color: Colors.white,
-                          textColor: const Color(0xFF667eea),
-                          borderColor: Colors.transparent,
-                          borderWidth: 1,
-                          borderRadius: 25,
-                        ),
-                      ),
+                                             Consumer<AuthProvider>(
+                         builder: (context, authProvider, child) {
+                           return Column(
+                             children: [
+                               if (authProvider.errorMessage != null)
+                                 Container(
+                                   width: double.infinity,
+                                   padding: const EdgeInsets.all(12),
+                                   margin: const EdgeInsets.only(bottom: 16),
+                                   decoration: BoxDecoration(
+                                     color: Colors.red.withOpacity(0.1),
+                                     borderRadius: BorderRadius.circular(8),
+                                     border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                   ),
+                                   child: Text(
+                                     authProvider.errorMessage!,
+                                     style: const TextStyle(color: Colors.red),
+                                     textAlign: TextAlign.center,
+                                   ),
+                                 ),
+                               FFButtonWidget(
+                                 onPressed: authProvider.isLoading
+                                     ? null
+                                     : () async {
+                                         if (_model.formKey.currentState?.validate() ?? false) {
+                                                                                       final phoneNumber = int.tryParse(_model.textController3!.text);
+                                            if (phoneNumber == null) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text('Please enter a valid phone number'),
+                                                  backgroundColor: Colors.red,
+                                                ),
+                                              );
+                                              return;
+                                            }
+                                            
+                                            final success = await authProvider.register(
+                                              name: _model.textController1!.text,
+                                              surname: _model.textController6!.text,
+                                              email: _model.textController2!.text,
+                                              phoneNumber: phoneNumber,
+                                              password: _model.textController4!.text,
+                                            );
+                                           
+                                           if (success) {
+                                             ScaffoldMessenger.of(context).showSnackBar(
+                                               const SnackBar(
+                                                 content: Text('Registration successful! Please login.'),
+                                                 backgroundColor: Colors.green,
+                                               ),
+                                             );
+                                             Navigator.pushNamed(context, '/login');
+                                           }
+                                         }
+                                       },
+                                 text: authProvider.isLoading ? 'Creating Account...' : 'Create Account',
+                                 options: FFButtonOptions(
+                                   width: double.infinity,
+                                   height: 50,
+                                   color: authProvider.isLoading ? Colors.grey : Colors.white,
+                                   textColor: const Color(0xFF667eea),
+                                   borderColor: Colors.transparent,
+                                   borderWidth: 1,
+                                   borderRadius: 25,
+                                 ),
+                               ),
+                             ],
+                           );
+                         },
+                       ),
                       const SizedBox(height: 20),
                       RichText(
                         textAlign: TextAlign.center,
