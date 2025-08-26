@@ -110,6 +110,66 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Update user profile
+  Future<bool> updateProfile({
+    String? profilePhoto,
+    int? phoneNumber,
+    String? identificationDoc,
+    String? streetAddress,
+    String? city,
+    String? state,
+    String? postalCode,
+    double? latitude,
+    double? longitude,
+  }) async {
+    if (_currentUser == null) {
+      _errorMessage = 'No user logged in';
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      print('🔍 AuthProvider: Starting profile update');
+      
+      final result = await ApiService.updateProfile(
+        userId: int.parse(_currentUser!.id!),
+        profilePhoto: profilePhoto,
+        phoneNumber: phoneNumber,
+        identificationDoc: identificationDoc,
+        streetAddress: streetAddress,
+        city: city,
+        state: state,
+        postalCode: postalCode,
+        latitude: latitude,
+        longitude: longitude,
+      );
+
+      print('🔍 AuthProvider: Update profile result: $result');
+      _isLoading = false;
+
+      if (result['success']) {
+        _currentUser = UserModel.fromJson(result['data']);
+        _errorMessage = null;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['message'];
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      print('❌ AuthProvider update profile error: ${e.toString()}');
+      _isLoading = false;
+      _errorMessage = 'An unexpected error occurred';
+      notifyListeners();
+      return false;
+    }
+  }
+
   // Clear error message
   void clearError() {
     _errorMessage = null;
