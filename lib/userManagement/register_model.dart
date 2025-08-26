@@ -27,7 +27,14 @@ class RegisterModel {
   // Validators
   String? textController1Validator(BuildContext context, String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Full name is required';
+      return 'Name is required';
+    }
+    return null;
+  }
+
+  String? textController6Validator(BuildContext context, String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Surname is required';
     }
     return null;
   }
@@ -73,7 +80,6 @@ class RegisterModel {
     return null;
   }
 
-  String? Function(BuildContext, String?) textController6Validator = (_, __) => null;
   String? Function(BuildContext, String?) textController7Validator = (_, __) => null;
 
   void dispose() {

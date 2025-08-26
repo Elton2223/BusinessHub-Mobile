@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:flutter/gestures.dart';
+import 'package:provider/provider.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/auth_manager.dart';
+import '../providers/auth_provider.dart';
 import 'login_model.dart';
 export 'login_model.dart';
 
@@ -181,25 +183,58 @@ class _LoginWidgetState extends State<LoginWidget> {
                         },
                       ),
                     ),
-                    FFButtonWidget(
-                      onPressed: () async {
-                        if (_model.formKey.currentState?.validate() ?? false) {
-                          // Sign in logic
-                          AuthManager.signIn(_model.textController1!.text);
-                          // Navigate to home page
-                          Navigator.pushNamed(context, '/home');
-                        }
+                    Consumer<AuthProvider>(
+                      builder: (context, authProvider, child) {
+                        return Column(
+                          children: [
+                            if (authProvider.errorMessage != null)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                ),
+                                child: Text(
+                                  authProvider.errorMessage!,
+                                  style: const TextStyle(color: Colors.red),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            FFButtonWidget(
+                              onPressed: authProvider.isLoading
+                                  ? null
+                                  : () async {
+                                      if (_model.formKey.currentState?.validate() ?? false) {
+                                        final success = await authProvider.login(
+                                          email: _model.textController1!.text,
+                                          password: _model.textController2!.text,
+                                        );
+                                        
+                                        if (success) {
+                                          // Sign in with AuthManager for compatibility
+                                          AuthManager.signIn(_model.textController1!.text);
+                                          // Navigate to home page
+                                          Navigator.pushNamed(context, '/home');
+                                        }
+                                      }
+                                    },
+                              text: authProvider.isLoading ? 'Signing In...' : 'Sign In',
+                              options: FFButtonOptions(
+                                width: double.infinity,
+                                height: isTablet ? 60 : 50,
+                                color: authProvider.isLoading ? Colors.grey : Colors.white,
+                                textColor: const Color(0xFF667eea),
+                                borderColor: Colors.transparent,
+                                borderWidth: 1,
+                                borderRadius: isTablet ? 30 : 25,
+                              ),
+                            ),
+                          ],
+                        );
                       },
-                      text: 'Sign In',
-                      options: FFButtonOptions(
-                        width: double.infinity,
-                        height: isTablet ? 60 : 50,
-                        color: Colors.white,
-                        textColor: const Color(0xFF667eea),
-                        borderColor: Colors.transparent,
-                        borderWidth: 1,
-                        borderRadius: isTablet ? 30 : 25,
-                      ),
                     ),
                     Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 32 : 20, 0, 0),
@@ -352,25 +387,58 @@ class _LoginWidgetState extends State<LoginWidget> {
                         },
                       ),
                       const SizedBox(height: 30),
-                      FFButtonWidget(
-                        onPressed: () async {
-                          if (_model.formKey.currentState?.validate() ?? false) {
-                            // Sign in logic
-                            AuthManager.signIn(_model.textController1!.text);
-                            // Navigate to home page
-                            Navigator.pushNamed(context, '/home');
-                          }
+                      Consumer<AuthProvider>(
+                        builder: (context, authProvider, child) {
+                          return Column(
+                            children: [
+                              if (authProvider.errorMessage != null)
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(12),
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                  ),
+                                  child: Text(
+                                    authProvider.errorMessage!,
+                                    style: const TextStyle(color: Colors.red),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              FFButtonWidget(
+                                onPressed: authProvider.isLoading
+                                    ? null
+                                    : () async {
+                                        if (_model.formKey.currentState?.validate() ?? false) {
+                                          final success = await authProvider.login(
+                                            email: _model.textController1!.text,
+                                            password: _model.textController2!.text,
+                                          );
+                                          
+                                          if (success) {
+                                            // Sign in with AuthManager for compatibility
+                                            AuthManager.signIn(_model.textController1!.text);
+                                            // Navigate to home page
+                                            Navigator.pushNamed(context, '/home');
+                                          }
+                                        }
+                                      },
+                                text: authProvider.isLoading ? 'Signing In...' : 'Sign In',
+                                options: FFButtonOptions(
+                                  width: double.infinity,
+                                  height: 50,
+                                  color: authProvider.isLoading ? Colors.grey : Colors.white,
+                                  textColor: const Color(0xFF667eea),
+                                  borderColor: Colors.transparent,
+                                  borderWidth: 1,
+                                  borderRadius: 25,
+                                ),
+                              ),
+                            ],
+                          );
                         },
-                        text: 'Sign In',
-                        options: FFButtonOptions(
-                          width: double.infinity,
-                          height: 50,
-                          color: Colors.white,
-                          textColor: const Color(0xFF667eea),
-                          borderColor: Colors.transparent,
-                          borderWidth: 1,
-                          borderRadius: 25,
-                        ),
                       ),
                       const SizedBox(height: 20),
                       RichText(
