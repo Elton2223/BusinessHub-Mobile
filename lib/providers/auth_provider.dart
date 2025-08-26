@@ -61,15 +61,17 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print('🔍 AuthProvider: Starting login for email: $email');
       final result = await ApiService.loginUser(
         email: email,
         password: password,
       );
 
+      print('🔍 AuthProvider: Login result: $result');
       _isLoading = false;
 
       if (result['success']) {
-        _currentUser = UserModel.fromJson(result['data']['user']);
+        _currentUser = UserModel.fromJson(result['data']);
         _errorMessage = null;
         notifyListeners();
         return true;
@@ -79,6 +81,8 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
+      print('❌ AuthProvider login error: ${e.toString()}');
+      print('❌ AuthProvider error type: ${e.runtimeType}');
       _isLoading = false;
       _errorMessage = 'An unexpected error occurred';
       notifyListeners();

@@ -63,14 +63,24 @@ class ApiService {
     required String password,
   }) async {
     try {
+      print('🔍 Attempting login for email: $email');
+      print('🔍 Login URL: ${ApiConfig.userManagementUrl}/login');
+      print('🔍 Request headers: ${ApiConfig.defaultHeaders}');
+      
+      final requestBody = {
+        'email': email,
+        'password': password,
+      };
+      print('🔍 Request body: ${jsonEncode(requestBody)}');
+      
       final response = await http.post(
         Uri.parse('${ApiConfig.userManagementUrl}/login'),
         headers: ApiConfig.defaultHeaders,
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode(requestBody),
       );
+      
+      print('🔍 Response status code: ${response.statusCode}');
+      print('🔍 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -98,6 +108,8 @@ class ApiService {
         };
       }
     } catch (e) {
+      print('❌ Login error: ${e.toString()}');
+      print('❌ Error type: ${e.runtimeType}');
       return {
         'success': false,
         'message': 'Network error: ${e.toString()}',
