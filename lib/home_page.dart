@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '../services/auth_service.dart';
-import '../services/api_service.dart';
-import 'dart:async';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,169 +15,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
-  Map<String, dynamic>? userData;
-  bool isLoading = true;
-  String userName = 'User'; // Default fallback
-  Timer? _autoRefreshTimer;
-  bool _isRefreshing = false; // Prevent multiple simultaneous refreshes
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-    _startAutoRefresh();
-  }
-
-  @override
-  void dispose() {
-    _stopAutoRefresh();
-    super.dispose();
-  }
-
-  void _startAutoRefresh() {
-    // Auto refresh every 30 seconds to keep user data updated
-    // This ensures the welcome message and user information stay current
-    // without overwhelming the system with too frequent API calls
-    _autoRefreshTimer = Timer.periodic(Duration(seconds: 30), (timer) {
-      if (mounted) {
-        _loadUserData();
-      }
-    });
-  }
-
-  void _stopAutoRefresh() {
-    _autoRefreshTimer?.cancel();
-    _autoRefreshTimer = null;
-  }
-
-  Future<void> _loadUserData() async {
-    // Prevent multiple simultaneous refreshes
-    if (_isRefreshing) return;
-    
-    try {
-      _isRefreshing = true;
-      
-      // Only show loading on initial load, not during auto-refresh
-      if (userData == null) {
-        setState(() {
-          isLoading = true;
-        });
-      }
-
-      // Get user data from stored preferences
-      final storedUserData = await AuthService.getUserData();
-      
-      if (storedUserData != null) {
-        // Only update state if data has actually changed
-        if (userData == null || 
-            userData!['name'] != storedUserData['name'] ||
-            userData!['email'] != storedUserData['email']) {
-          setState(() {
-            userData = storedUserData;
-            userName = '${storedUserData['name'] ?? 'User'}';
-            isLoading = false;
-          });
-          
-          // Only print on initial load to avoid console spam
-          if (userData == null) {
-            print('Loaded user data: $userData');
-            print('User name: $userName');
-          }
-        }
-      } else {
-        // If no stored data, try to get current user from API
-        final currentUser = await AuthService.getCurrentUser();
-        if (currentUser != null) {
-          // Only update state if data has actually changed
-          if (userData == null || 
-              userData!['name'] != currentUser['name'] ||
-              userData!['email'] != currentUser['email']) {
-            setState(() {
-              userData = currentUser;
-              userName = '${currentUser['name'] ?? 'User'}';
-              isLoading = false;
-            });
-          }
-        } else {
-          setState(() {
-            isLoading = false;
-            userName = 'User';
-          });
-        }
-      }
-    } on ApiException catch (e) {
-      // Handle API-specific errors
-      print('API error loading user data: ${e.message}');
-      if (userData == null) {
-        // Only show error on initial load
-        print('Initial load failed: ${e.message}');
-      }
-      setState(() {
-        isLoading = false;
-        userName = 'User';
-      });
-    } catch (e) {
-      // Handle other errors
-      print('Unexpected error loading user data: $e');
-      if (userData == null) {
-        print('Initial load failed with unexpected error: $e');
-      }
-      setState(() {
-        isLoading = false;
-        userName = 'User';
-      });
-    } finally {
-      _isRefreshing = false;
-    }
-  }
-
-  String _getUserGreeting() {
-    if (userData != null) {
-      final name = userData!['name'] ?? 'User';
-      final surname = userData!['surname'] ?? '';
-      final fullName = '${name}${surname.isNotEmpty ? ' $surname' : ''}';
-      
-      // Smart truncation for long names
-      if (fullName.length > 25) {
-        // For very long names, show only first name
-        return 'Welcome $name';
-      } else if (fullName.length > 20) {
-        // For moderately long names, truncate with ellipsis
-        return 'Welcome ${fullName.substring(0, 17)}...';
-      }
-      return 'Welcome $fullName';
-    }
-    return 'Welcome User';
-  }
-
-  double _getResponsiveFontSize(BuildContext context, String text) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final textLength = text.length;
-    
-    // Adjust font size based on text length and screen width
-    if (textLength > 25) {
-      return screenWidth < 400 ? 20.0 : 24.0;
-    } else if (textLength > 20) {
-      return screenWidth < 400 ? 22.0 : 26.0;
-    } else {
-      return screenWidth < 400 ? 24.0 : 28.0;
-    }
-  }
-
-  String _formatNameForDisplay(String? name, String? surname) {
-    if (name == null || name.isEmpty) return 'User';
-    
-    final fullName = surname != null && surname.isNotEmpty 
-        ? '$name $surname' 
-        : name;
-    
-    // For very long names, show only first name
-    if (fullName.length > 25) {
-      return name;
-    }
-    
-    return fullName;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -196,52 +30,12 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                   color: FlutterFlowTheme.of(context).primaryColor,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'BusinessHub',
-                      style: FlutterFlowTheme.of(context).title1.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    if (userData != null) ...[
-                      Flexible(
-                        child: Text(
-                          'Welcome, ${userData!['name'] ?? 'User'}',
-                          style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Flexible(
-                        child: Text(
-                          userData!['email'] ?? '',
-                          style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 12,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                    ] else
-                      Flexible(
-                        child: Text(
-                          'Welcome, User',
-                          style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                  ],
+                child: Text(
+                  'BusinessHub',
+                  style: FlutterFlowTheme.of(context).title1.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               ListTile(
@@ -258,16 +52,6 @@ class _HomePageState extends State<HomePage> {
                 leading: Icon(Icons.person),
                 title: Text('Profile'),
                 onTap: () => Navigator.pop(context),
-              ),
-              Divider(),
-              ListTile(
-                leading: Icon(Icons.logout),
-                title: Text('Logout'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await AuthService.logout();
-                  Navigator.pushReplacementNamed(context, '/login');
-                },
               ),
             ],
           ),
@@ -303,44 +87,21 @@ class _HomePageState extends State<HomePage> {
                          fontWeight: FontWeight.bold,
                        ),
                      ),
-                     Row(
-                       children: [
-                          // Auto-refresh indicator
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: _isRefreshing ? Color(0xFFFF9800) : Color(0xFF06C698),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          // Connection status indicator
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: userData != null ? Color(0xFF4CAF50) : Color(0xFFFF5722),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          IconButton(
-                            icon: Icon(Icons.notifications),
-                            onPressed: () {},
-                          ),
-                        ],
-                      ),
+                     IconButton(
+                       icon: Icon(Icons.notifications),
+                       onPressed: () {},
+                     ),
                    ],
                  ),
                ),
              // Main Content
              Expanded(
-               child: SingleChildScrollView(
+               child: Padding(
                  padding: EdgeInsets.all(16),
-                 child: Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                   children: [
+                 child: SingleChildScrollView(
+                   child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
                      // Desktop App Bar
                      if (MediaQuery.of(context).size.width >= 768)
                        Padding(
@@ -386,17 +147,14 @@ class _HomePageState extends State<HomePage> {
                      // Welcome Banner
                      Container(
                        width: double.infinity,
-                       constraints: BoxConstraints(
-                         minHeight: 200,
-                         maxHeight: 250,
-                       ),
-                       decoration: BoxDecoration(
-                         borderRadius: BorderRadius.circular(25),
-                         image: DecorationImage(
-                           fit: BoxFit.cover,
-                           image: AssetImage('images/splash.jpeg'),
-                         ),
-                       ),
+                       height: 200,
+                                               decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          image: DecorationImage(
+                            fit: BoxFit.cover,
+                            image: AssetImage('images/splash.jpeg'),
+                          ),
+                        ),
                        child: Container(
                          decoration: BoxDecoration(
                            borderRadius: BorderRadius.circular(25),
@@ -415,44 +173,14 @@ class _HomePageState extends State<HomePage> {
                              crossAxisAlignment: CrossAxisAlignment.start,
                              mainAxisAlignment: MainAxisAlignment.center,
                              children: [
-                                if (isLoading)
-                                  Row(
-                                    children: [
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                        ),
-                                      ),
-                                      SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          'Loading...',
-                                          style: GoogleFonts.readexPro(
-                                            color: Colors.white,
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                else
-                                  Flexible(
-                                    child: Text(
-                                      _getUserGreeting(),
-                                      style: GoogleFonts.readexPro(
-                                        color: Colors.white,
-                                        fontSize: _getResponsiveFontSize(context, _getUserGreeting()),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 2,
-                                    ),
-                                  ),
+                               Text(
+                                 'Welcome Khethani',
+                                 style: GoogleFonts.readexPro(
+                                   color: Colors.white,
+                                   fontSize: 28,
+                                   fontWeight: FontWeight.bold,
+                                 ),
+                               ),
                                SizedBox(height: 8),
                                Text(
                                  'Enjoy using BusinessHub to find\nany nearby jobs at your area',
@@ -620,6 +348,7 @@ class _HomePageState extends State<HomePage> {
                    ],
                  ),
                ),
+             ),
              ),
              // Fixed Bottom Navigation Bar
              Container(
