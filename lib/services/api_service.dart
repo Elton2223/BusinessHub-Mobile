@@ -157,6 +157,82 @@ class ApiService {
     }
   }
 
+  // Update user profile
+  static Future<Map<String, dynamic>> updateProfile({
+    required int userId,
+    String? profilePhoto,
+    int? phoneNumber,
+    String? identificationDoc,
+    String? streetAddress,
+    String? city,
+    String? state,
+    String? postalCode,
+    double? latitude,
+    double? longitude,
+  }) async {
+    try {
+      print('🔍 Updating profile for user ID: $userId');
+      
+      final requestBody = <String, dynamic>{};
+      if (profilePhoto != null) requestBody['profile_photo'] = profilePhoto;
+      if (phoneNumber != null) requestBody['phone_number'] = phoneNumber;
+      if (identificationDoc != null) requestBody['identification_doc'] = identificationDoc;
+      if (streetAddress != null) requestBody['street_address'] = streetAddress;
+      if (city != null) requestBody['city'] = city;
+      if (state != null) requestBody['state'] = state;
+      if (postalCode != null) requestBody['postal_code'] = postalCode;
+      if (latitude != null) requestBody['latitude'] = latitude;
+      if (longitude != null) requestBody['longitude'] = longitude;
+
+      print('🔍 Update profile request body: ${jsonEncode(requestBody)}');
+
+      final response = await http.patch(
+        Uri.parse('${ApiConfig.userManagementUrl}/$userId'),
+        headers: ApiConfig.defaultHeaders,
+        body: jsonEncode(requestBody),
+      );
+
+      print('🔍 Update profile response status: ${response.statusCode}');
+      print('🔍 Update profile response body: ${response.body}');
+
+      if (response.statusCode == 204) {
+        // PATCH endpoint returns 204 on success, we need to fetch the updated user data
+        final getUserResponse = await http.get(
+          Uri.parse('${ApiConfig.userManagementUrl}/$userId'),
+          headers: ApiConfig.defaultHeaders,
+        );
+        
+        if (getUserResponse.statusCode == 200) {
+          final userData = jsonDecode(getUserResponse.body);
+          await _storeAuthData(userData);
+          
+          return {
+            'success': true,
+            'data': userData,
+            'message': 'Profile updated successfully',
+          };
+        } else {
+          return {
+            'success': false,
+            'message': 'Profile updated but failed to fetch updated data',
+          };
+        }
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['error']?['message'] ?? 'Failed to update profile',
+        };
+      }
+    } catch (e) {
+      print('❌ Update profile error: ${e.toString()}');
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
   // Logout user
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
