@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -20,6 +21,10 @@ class ProfileScreen extends StatelessWidget {
           );
         }
 
+        // Debug: Print user profile photo info
+        print('🔍 Profile Screen - User profile photo: ${user.profilePhoto}');
+        print('🔍 Profile Screen - User profile photo length: ${user.profilePhoto?.length}');
+        
         return Scaffold(
           appBar: AppBar(
             title: const Text('Profile'),
@@ -48,9 +53,7 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 60,
-                        backgroundImage: user.profilePhoto != null && user.profilePhoto!.isNotEmpty
-                            ? NetworkImage(user.profilePhoto!)
-                            : const AssetImage('images/logo.png') as ImageProvider,
+                        backgroundImage: _getProfileImage(user.profilePhoto),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -228,5 +231,56 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  ImageProvider _getProfileImage(String? profilePhoto) {
+    if (profilePhoto == null || profilePhoto.isEmpty) {
+      return const AssetImage('images/logo.png');
+    }
+
+    try {
+      if (profilePhoto.startsWith('data:image/')) {
+        // Handle base64 image
+        final parts = profilePhoto.split(',');
+        if (parts.length != 2) {
+          print('⚠️ Invalid base64 image format');
+          return const AssetImage('images/logo.png');
+        }
+
+        String base64Data = parts[1];
+        
+        // Remove any whitespace or newlines
+        base64Data = base64Data.trim().replaceAll(RegExp(r'\s+'), '');
+        
+        // Ensure proper base64 padding
+        while (base64Data.length % 4 != 0) {
+          base64Data += '=';
+        }
+
+        // Validate base64 characters
+        if (!RegExp(r'^[A-Za-z0-9+/]*={0,2}$').hasMatch(base64Data)) {
+          print('⚠️ Invalid base64 characters');
+          return const AssetImage('images/logo.png');
+        }
+
+        try {
+          final bytes = base64Decode(base64Data);
+          if (bytes.isEmpty) {
+            print('⚠️ Empty base64 data');
+            return const AssetImage('images/logo.png');
+          }
+          return MemoryImage(bytes);
+        } catch (e) {
+          print('⚠️ Error decoding base64 image: $e');
+          return const AssetImage('images/logo.png');
+        }
+      } else {
+        // Handle network image
+        return NetworkImage(profilePhoto);
+      }
+    } catch (e) {
+      print('⚠️ Error processing profile image: $e');
+      return const AssetImage('images/logo.png');
+    }
   }
 }
