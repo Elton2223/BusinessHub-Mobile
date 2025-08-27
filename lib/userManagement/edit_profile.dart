@@ -524,26 +524,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 16),
               
               // Coordinates Display
-              if (_latitude != null && _longitude != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Coordinates:',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text('Latitude: ${_latitude!.toStringAsFixed(6)}'),
-                      Text('Longitude: ${_longitude!.toStringAsFixed(6)}'),
-                    ],
-                  ),
-                ),
+              // if (_latitude != null && _longitude != null)
+              //   Container(
+              //     padding: const EdgeInsets.all(12),
+              //     decoration: BoxDecoration(
+              //       color: Colors.grey[100],
+              //       borderRadius: BorderRadius.circular(8),
+              //     ),
+              //     child: Column(
+              //       crossAxisAlignment: CrossAxisAlignment.start,
+              //       children: [
+              //         Text(
+              //           'Coordinates:',
+              //           style: Theme.of(context).textTheme.titleMedium,
+              //         ),
+              //         const SizedBox(height: 4),
+              //         Text('Latitude: ${_latitude!.toStringAsFixed(6)}'),
+              //         Text('Longitude: ${_longitude!.toStringAsFixed(6)}'),
+              //       ],
+              //     ),
+              //   ),
               
               const SizedBox(height: 32),
               
