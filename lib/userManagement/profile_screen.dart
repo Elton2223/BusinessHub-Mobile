@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../flutter_flow/flutter_flow_theme.dart';
 import 'edit_profile.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -28,7 +29,7 @@ class ProfileScreen extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Profile'),
-            backgroundColor: Colors.blue,
+            backgroundColor: FlutterFlowTheme.of(context).primaryColor,
             foregroundColor: Colors.white,
             actions: [
               IconButton(
@@ -81,7 +82,7 @@ class ProfileScreen extends StatelessWidget {
                         icon: const Icon(Icons.edit),
                         label: const Text('Edit Profile'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
+                          backgroundColor: FlutterFlowTheme.of(context).primaryColor,
                           foregroundColor: Colors.white,
                         ),
                       ),
@@ -115,8 +116,8 @@ class ProfileScreen extends StatelessWidget {
                     _buildInfoRow('City', user.city ?? 'Not set'),
                     _buildInfoRow('State/Province', user.state ?? 'Not set'),
                     _buildInfoRow('Postal Code', user.postalCode ?? 'Not set'),
-                    if (user.latitude != null && user.longitude != null)
-                      _buildInfoRow('Coordinates', '${user.latitude!.toStringAsFixed(6)}, ${user.longitude!.toStringAsFixed(6)}'),
+                    // if (user.latitude != null && user.longitude != null)
+                    //   _buildInfoRow('Coordinates', '${user.latitude!.toStringAsFixed(6)}, ${user.longitude!.toStringAsFixed(6)}'),
                   ],
                 ),
                 
@@ -147,7 +148,7 @@ class ProfileScreen extends StatelessWidget {
           title,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.blue[700],
+            color: FlutterFlowTheme.of(context).primaryColor,
           ),
         ),
         const SizedBox(height: 12),
