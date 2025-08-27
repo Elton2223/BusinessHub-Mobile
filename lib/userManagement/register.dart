@@ -124,20 +124,21 @@ class _RegisterWidgetState extends State<RegisterWidget> {
               ),
             ),
           ),
-          Align(
-            alignment: const AlignmentDirectional(0, 0),
-            child: Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 16 : 12, 0, 0),
-              child: Text(
-                'Join BusinessHub and find jobs/create jobs in your area',
-                style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                  color: FlutterFlowTheme.of(context).secondaryText,
-                  fontSize: isTablet ? 18 : 16,
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
-            ),
-          ),
+                     Align(
+             alignment: const AlignmentDirectional(0, 0),
+             child: Padding(
+               padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 16 : 12, 0, 0),
+               child: Text(
+                 'Join BusinessHub and find jobs/create jobs in your area',
+                 textAlign: TextAlign.center,
+                 style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                   color: FlutterFlowTheme.of(context).secondaryText,
+                   fontSize: isTablet ? 18 : 16,
+                   fontWeight: FontWeight.normal,
+                 ),
+               ),
+             ),
+           ),
           Expanded(
             child: SingleChildScrollView(
               child: Form(
