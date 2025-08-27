@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -171,7 +172,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       identificationDoc = _identificationController.text;
     }
 
+         // Convert selected image to base64 if available
+     String? profilePhoto;
+     if (_selectedImage != null) {
+       try {
+         print('📸 Processing selected image for upload...');
+         final bytes = await _selectedImage!.readAsBytes();
+         final base64Image = base64Encode(bytes);
+         
+         // Ensure proper base64 padding
+         String paddedBase64 = base64Image;
+         while (paddedBase64.length % 4 != 0) {
+           paddedBase64 += '=';
+         }
+         
+         profilePhoto = 'data:image/jpeg;base64,$paddedBase64';
+         print('📸 Image converted to base64 successfully (${paddedBase64.length} characters)');
+       } catch (e) {
+         print('❌ Error processing image: $e');
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Error processing image: $e')),
+         );
+         return;
+       }
+     } else {
+       print('📸 No new image selected for upload');
+     }
+
     final success = await authProvider.updateProfile(
+      profilePhoto: profilePhoto,
       phoneNumber: phoneNumber,
       identificationDoc: identificationDoc,
       streetAddress: _streetAddressController.text.isNotEmpty ? _streetAddressController.text : null,
@@ -183,13 +212,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
 
     if (success) {
+      String message = 'Profile updated successfully';
+      if (_selectedImage != null) {
+        message += ' with new photo';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+        ),
       );
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? 'Failed to update profile')),
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Failed to update profile'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -216,14 +255,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               Center(
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundImage: _selectedImage != null
-                          ? FileImage(_selectedImage!)
-                          : (user?.profilePhoto != null && user!.profilePhoto!.isNotEmpty
-                              ? NetworkImage(user.profilePhoto!) as ImageProvider
-                              : const AssetImage('images/logo.png')),
-                    ),
+                                         CircleAvatar(
+                       radius: 60,
+                       backgroundImage: _selectedImage != null
+                           ? FileImage(_selectedImage!)
+                           : _getProfileImage(user?.profilePhoto),
+                     ),
                     const SizedBox(height: 16),
                                          Wrap(
                        spacing: 12,
@@ -520,7 +557,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     foregroundColor: Colors.white,
                   ),
                   child: authProvider.isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Saving...',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        )
                       : const Text(
                           'Save Profile',
                           style: TextStyle(fontSize: 16),
@@ -543,12 +597,63 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: Text(
                     authProvider.errorMessage!,
                     style: TextStyle(color: Colors.red[700]),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+                                   ),
+               ),
+             ],
+           ),
+         ),
+       ),
+     );
+   }
+
+   ImageProvider _getProfileImage(String? profilePhoto) {
+     if (profilePhoto == null || profilePhoto.isEmpty) {
+       return const AssetImage('images/logo.png');
+     }
+
+     try {
+       if (profilePhoto.startsWith('data:image/')) {
+         // Handle base64 image
+         final parts = profilePhoto.split(',');
+         if (parts.length != 2) {
+           print('⚠️ Invalid base64 image format');
+           return const AssetImage('images/logo.png');
+         }
+
+         String base64Data = parts[1];
+         
+         // Remove any whitespace or newlines
+         base64Data = base64Data.trim().replaceAll(RegExp(r'\s+'), '');
+         
+         // Ensure proper base64 padding
+         while (base64Data.length % 4 != 0) {
+           base64Data += '=';
+         }
+
+         // Validate base64 characters
+         if (!RegExp(r'^[A-Za-z0-9+/]*={0,2}$').hasMatch(base64Data)) {
+           print('⚠️ Invalid base64 characters');
+           return const AssetImage('images/logo.png');
+         }
+
+         try {
+           final bytes = base64Decode(base64Data);
+           if (bytes.isEmpty) {
+             print('⚠️ Empty base64 data');
+             return const AssetImage('images/logo.png');
+           }
+           return MemoryImage(bytes);
+         } catch (e) {
+           print('⚠️ Error decoding base64 image: $e');
+           return const AssetImage('images/logo.png');
+         }
+       } else {
+         // Handle network image
+         return NetworkImage(profilePhoto);
+       }
+     } catch (e) {
+       print('⚠️ Error processing profile image: $e');
+       return const AssetImage('images/logo.png');
+     }
+   }
 }

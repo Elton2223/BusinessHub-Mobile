@@ -134,6 +134,10 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       print('🔍 AuthProvider: Starting profile update');
+      print('🔍 AuthProvider: Profile photo provided: ${profilePhoto != null}');
+      if (profilePhoto != null) {
+        print('🔍 AuthProvider: Profile photo length: ${profilePhoto.length}');
+      }
       
       final result = await ApiService.updateProfile(
         userId: int.parse(_currentUser!.id!),
