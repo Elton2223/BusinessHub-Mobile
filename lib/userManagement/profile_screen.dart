@@ -69,6 +69,32 @@ class ProfileScreen extends StatelessWidget {
                           color: Colors.grey[600],
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      // Rating Display at the top
+                      if (user.ratings != null) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${user.ratings}/5',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
                         onPressed: () {
@@ -123,15 +149,15 @@ class ProfileScreen extends StatelessWidget {
                 
                 const SizedBox(height: 24),
                 
-                // Ratings Section
-                if (user.ratings != null)
-                  _buildSection(
-                    context,
-                    'Ratings',
-                    [
-                      _buildRatingRow(user.ratings!),
-                    ],
-                  ),
+                // // Ratings Section
+                // if (user.ratings != null)
+                //   _buildSection(
+                //     context,
+                //     'Ratings',
+                //     [
+                //       _buildRatingRow(user.ratings!),
+                //     ],
+                //   ),
               ],
             ),
           ),
@@ -197,42 +223,42 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRatingRow(int rating) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 120,
-            child: Text(
-              'Rating',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Row(
-              children: List.generate(5, (index) {
-                return Icon(
-                  index < rating ? Icons.star : Icons.star_border,
-                  color: index < rating ? Colors.amber : Colors.grey,
-                  size: 20,
-                );
-              }),
-            ),
-          ),
-          Text(
-            '$rating/5',
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildRatingRow(int rating) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(vertical: 8.0),
+  //     child: Row(
+  //       children: [
+  //         const SizedBox(
+  //           width: 120,
+  //           child: Text(
+  //             'Rating',
+  //             style: TextStyle(
+  //               fontWeight: FontWeight.w600,
+  //               color: Colors.grey,
+  //             ),
+  //           ),
+  //         ),
+  //         Expanded(
+  //           child: Row(
+  //             children: List.generate(5, (index) {
+  //               return Icon(
+  //                 index < rating ? Icons.star : Icons.star_border,
+  //                 color: index < rating ? Colors.amber : Colors.grey,
+  //                 size: 20,
+  //               );
+  //             }),
+  //           ),
+  //         ),
+  //         Text(
+  //           '$rating/5',
+  //           style: const TextStyle(
+  //             fontWeight: FontWeight.w500,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   ImageProvider _getProfileImage(String? profilePhoto) {
     if (profilePhoto == null || profilePhoto.isEmpty) {
