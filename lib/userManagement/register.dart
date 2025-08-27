@@ -62,15 +62,8 @@ class _RegisterWidgetState extends State<RegisterWidget> {
       backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
       body: SafeArea(
         child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF667eea),
-                Color(0xFF764ba2),
-              ],
-            ),
+          decoration: BoxDecoration(
+            color: FlutterFlowTheme.of(context).primaryBackground,
           ),
           child: isTablet && isLandscape
               ? _buildLandscapeLayout()
@@ -92,42 +85,31 @@ class _RegisterWidgetState extends State<RegisterWidget> {
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
-          // Glassmorphism Logo
+          // Logo Container
           Container(
             width: isTablet ? 150 : 120,
             height: isTablet ? 150 : 120,
             margin: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 32 : 24),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(isTablet ? 40 : 30),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withOpacity(0.2),
-                  Colors.white.withOpacity(0.1),
-                ],
-              ),
+              color: FlutterFlowTheme.of(context).primaryColor,
+              boxShadow: [
+                BoxShadow(
+                  color: FlutterFlowTheme.of(context).primaryColor.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
               border: Border.all(
                 color: Colors.white.withOpacity(0.3),
                 width: 1,
               ),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(isTablet ? 40 : 30),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.business_center,
-                      size: isTablet ? 70 : 50,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+            child: Center(
+              child: Icon(
+                Icons.business_center,
+                size: isTablet ? 70 : 50,
+                color: Colors.white,
               ),
             ),
           ),
@@ -136,7 +118,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
             child: Text(
               'Create Account',
               style: FlutterFlowTheme.of(context).title1.copyWith(
-                color: Colors.white,
+                color: FlutterFlowTheme.of(context).primaryText,
                 fontSize: isTablet ? 36 : 28,
                 fontWeight: FontWeight.bold,
               ),
@@ -147,9 +129,9 @@ class _RegisterWidgetState extends State<RegisterWidget> {
             child: Padding(
               padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 16 : 12, 0, 0),
               child: Text(
-                'Join BusinessHub and grow your business',
+                'Join BusinessHub and find jobs/create jobs in your area',
                 style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                  color: Colors.white.withOpacity(0.8),
+                  color: FlutterFlowTheme.of(context).secondaryText,
                   fontSize: isTablet ? 18 : 16,
                   fontWeight: FontWeight.normal,
                 ),
@@ -283,15 +265,15 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                                       }
                                     },
                               text: authProvider.isLoading ? 'Creating Account...' : 'Create Account',
-                              options: FFButtonOptions(
-                                width: double.infinity,
-                                height: isTablet ? 60 : 50,
-                                color: authProvider.isLoading ? Colors.grey : Colors.white,
-                                textColor: const Color(0xFF667eea),
-                                borderColor: Colors.transparent,
-                                borderWidth: 1,
-                                borderRadius: isTablet ? 30 : 25,
-                              ),
+                                                             options: FFButtonOptions(
+                                 width: double.infinity,
+                                 height: isTablet ? 60 : 50,
+                                 color: authProvider.isLoading ? Colors.grey : FlutterFlowTheme.of(context).primaryColor,
+                                 textColor: Colors.white,
+                                 borderColor: Colors.transparent,
+                                 borderWidth: 1,
+                                 borderRadius: isTablet ? 30 : 25,
+                               ),
                             ),
                           ],
                         );
@@ -302,20 +284,20 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                       child: RichText(
                         text: TextSpan(
                           children: [
-                            TextSpan(
-                              text: 'Already have an account? ',
-                              style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: isTablet ? 16 : 14,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Sign In',
-                              style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                                color: Colors.white,
-                                fontSize: isTablet ? 16 : 14,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                                         TextSpan(
+                               text: 'Already have an account? ',
+                               style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                                 color: FlutterFlowTheme.of(context).secondaryText,
+                                 fontSize: isTablet ? 16 : 14,
+                               ),
+                             ),
+                             TextSpan(
+                               text: 'Sign In',
+                               style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                                 color: FlutterFlowTheme.of(context).primaryColor,
+                                 fontSize: isTablet ? 16 : 14,
+                                 fontWeight: FontWeight.bold,
+                               ),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () {
                                   // Navigate to login
@@ -356,42 +338,31 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                   margin: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 32),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(30),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withOpacity(0.2),
-                        Colors.white.withOpacity(0.1),
-                      ],
-                    ),
+                    color: FlutterFlowTheme.of(context).primaryColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: FlutterFlowTheme.of(context).primaryColor.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                     border: Border.all(
                       color: Colors.white.withOpacity(0.3),
                       width: 1,
                     ),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(30),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.business_center,
-                            size: 50,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.business_center,
+                      size: 50,
+                      color: Colors.white,
                     ),
                   ),
                 ),
                 Text(
                   'Create Account',
                   style: FlutterFlowTheme.of(context).title1.copyWith(
-                    color: Colors.white,
+                    color: FlutterFlowTheme.of(context).primaryText,
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                   ),
@@ -401,7 +372,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                   child: Text(
                     'Join BusinessHub and grow your business',
                     style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                      color: Colors.white.withOpacity(0.8),
+                      color: FlutterFlowTheme.of(context).secondaryText,
                       fontSize: 18,
                       fontWeight: FontWeight.normal,
                     ),
@@ -543,15 +514,15 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                                          }
                                        },
                                  text: authProvider.isLoading ? 'Creating Account...' : 'Create Account',
-                                 options: FFButtonOptions(
-                                   width: double.infinity,
-                                   height: 50,
-                                   color: authProvider.isLoading ? Colors.grey : Colors.white,
-                                   textColor: const Color(0xFF667eea),
-                                   borderColor: Colors.transparent,
-                                   borderWidth: 1,
-                                   borderRadius: 25,
-                                 ),
+                                                                   options: FFButtonOptions(
+                                    width: double.infinity,
+                                    height: 50,
+                                    color: authProvider.isLoading ? Colors.grey : FlutterFlowTheme.of(context).primaryColor,
+                                    textColor: Colors.white,
+                                    borderColor: Colors.transparent,
+                                    borderWidth: 1,
+                                    borderRadius: 25,
+                                  ),
                                ),
                              ],
                            );
@@ -562,20 +533,20 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                         textAlign: TextAlign.center,
                         text: TextSpan(
                           children: [
-                            TextSpan(
-                              text: 'Already have an account? ',
-                              style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 14,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Sign In',
-                              style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                                         TextSpan(
+                               text: 'Already have an account? ',
+                               style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                                 color: FlutterFlowTheme.of(context).secondaryText,
+                                 fontSize: 14,
+                               ),
+                             ),
+                             TextSpan(
+                               text: 'Sign In',
+                               style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                                 color: FlutterFlowTheme.of(context).primaryColor,
+                                 fontSize: 14,
+                                 fontWeight: FontWeight.bold,
+                               ),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () {
                                   // Navigate to login
@@ -610,9 +581,9 @@ class _RegisterWidgetState extends State<RegisterWidget> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.grey[100],
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: FlutterFlowTheme.of(context).lineColor,
           width: 1,
         ),
       ),
@@ -622,18 +593,18 @@ class _RegisterWidgetState extends State<RegisterWidget> {
         obscureText: false,
         keyboardType: keyboardType,
         style: TextStyle(
-          color: Colors.white,
+          color: FlutterFlowTheme.of(context).primaryText,
           fontSize: isTablet ? 18 : 16,
         ),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: FlutterFlowTheme.of(context).secondaryText,
             fontSize: isTablet ? 16 : 14,
           ),
           hintText: hint,
           hintStyle: TextStyle(
-            color: Colors.white.withOpacity(0.5),
+            color: FlutterFlowTheme.of(context).secondaryText.withOpacity(0.7),
             fontSize: isTablet ? 16 : 14,
           ),
           border: InputBorder.none,
@@ -643,7 +614,9 @@ class _RegisterWidgetState extends State<RegisterWidget> {
             isTablet ? 20 : 16,
             isTablet ? 20 : 16,
           ),
+          alignLabelWithHint: true,
         ),
+        textAlign: TextAlign.center,
         validator: validator != null ? (value) => validator(context, value) : null,
       ),
     );
@@ -664,9 +637,9 @@ class _RegisterWidgetState extends State<RegisterWidget> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.grey[100],
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: FlutterFlowTheme.of(context).lineColor,
           width: 1,
         ),
       ),
@@ -675,18 +648,18 @@ class _RegisterWidgetState extends State<RegisterWidget> {
         focusNode: focusNode,
         obscureText: !isVisible,
         style: TextStyle(
-          color: Colors.white,
+          color: FlutterFlowTheme.of(context).primaryText,
           fontSize: isTablet ? 18 : 16,
         ),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: FlutterFlowTheme.of(context).secondaryText,
             fontSize: isTablet ? 16 : 14,
           ),
           hintText: hint,
           hintStyle: TextStyle(
-            color: Colors.white.withOpacity(0.5),
+            color: FlutterFlowTheme.of(context).secondaryText.withOpacity(0.7),
             fontSize: isTablet ? 16 : 14,
           ),
           border: InputBorder.none,
@@ -696,15 +669,17 @@ class _RegisterWidgetState extends State<RegisterWidget> {
             isTablet ? 20 : 16,
             isTablet ? 20 : 16,
           ),
+          alignLabelWithHint: true,
           suffixIcon: IconButton(
             icon: Icon(
               isVisible ? Icons.visibility : Icons.visibility_off,
-              color: Colors.white.withOpacity(0.7),
+              color: FlutterFlowTheme.of(context).secondaryText,
               size: isTablet ? 24 : 20,
             ),
             onPressed: () => onVisibilityChanged(!isVisible),
           ),
         ),
+        textAlign: TextAlign.center,
         validator: validator != null ? (value) => validator(context, value) : null,
       ),
     );

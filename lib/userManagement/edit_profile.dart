@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../providers/auth_provider.dart';
 import '../models/user_model.dart';
+import '../flutter_flow/flutter_flow_theme.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({Key? key}) : super(key: key);
@@ -241,7 +242,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Profile'),
-        backgroundColor: Colors.blue,
+        backgroundColor: FlutterFlowTheme.of(context).primaryColor,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -553,7 +554,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: ElevatedButton(
                   onPressed: authProvider.isLoading ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: FlutterFlowTheme.of(context).primaryColor,
                     foregroundColor: Colors.white,
                   ),
                   child: authProvider.isLoading
