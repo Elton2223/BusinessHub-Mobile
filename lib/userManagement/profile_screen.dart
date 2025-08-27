@@ -116,8 +116,8 @@ class ProfileScreen extends StatelessWidget {
                     _buildInfoRow('City', user.city ?? 'Not set'),
                     _buildInfoRow('State/Province', user.state ?? 'Not set'),
                     _buildInfoRow('Postal Code', user.postalCode ?? 'Not set'),
-                    if (user.latitude != null && user.longitude != null)
-                      _buildInfoRow('Coordinates', '${user.latitude!.toStringAsFixed(6)}, ${user.longitude!.toStringAsFixed(6)}'),
+                    // if (user.latitude != null && user.longitude != null)
+                    //   _buildInfoRow('Coordinates', '${user.latitude!.toStringAsFixed(6)}, ${user.longitude!.toStringAsFixed(6)}'),
                   ],
                 ),
                 
