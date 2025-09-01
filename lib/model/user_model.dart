@@ -15,6 +15,7 @@ class UserModel {
   final double? latitude;
   final double? longitude;
   final String? password;
+  final bool? isAdmin;
 
   UserModel({
     this.id,
@@ -33,6 +34,7 @@ class UserModel {
     this.latitude,
     this.longitude,
     this.password,
+    this.isAdmin,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -53,6 +55,7 @@ class UserModel {
       latitude: json['latitude']?.toDouble(),
       longitude: json['longitude']?.toDouble(),
       password: json['password'],
+      isAdmin: json['isAdmin'] ?? json['is_admin'] ?? false,
     );
   }
 
@@ -74,6 +77,7 @@ class UserModel {
       'latitude': latitude,
       'longitude': longitude,
       'password': password,
+      'isAdmin': isAdmin,
     };
   }
 
@@ -82,5 +86,13 @@ class UserModel {
     final name = this.name ?? '';
     final surname = this.surname ?? '';
     return '$name $surname'.trim();
+  }
+
+  // Check if user is admin (ID 2 or has admin flag)
+  bool get isAdminUser {
+    print('🔍 UserModel.isAdminUser: id=$id, isAdmin=$isAdmin');
+    final isAdminUser = id == '2' || isAdmin == true;
+    print('🔍 UserModel.isAdminUser: result=$isAdminUser');
+    return isAdminUser;
   }
 }

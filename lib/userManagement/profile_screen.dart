@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../flutter_flow/flutter_flow_theme.dart';
+import '../widgets/neumorphic_widgets.dart';
+import '../flutter_flow/neumorphic_theme.dart';
 import 'edit_profile.dart';
 
 class ProfileScreen extends StatelessWidget {

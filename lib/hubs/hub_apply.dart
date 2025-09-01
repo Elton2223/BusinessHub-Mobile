@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
+import '../widgets/neumorphic_widgets.dart';
+import '../flutter_flow/neumorphic_theme.dart';
 
 class HubApplyPage extends StatefulWidget {
   const HubApplyPage({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import '../models/user_model.dart';
+import '../model/user_model.dart';
 
 class AuthProvider extends ChangeNotifier {
   UserModel? _currentUser;
@@ -10,6 +10,13 @@ class AuthProvider extends ChangeNotifier {
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  
+  // Check if current user is admin
+  bool get isAdmin {
+    final isAdminUser = _currentUser?.isAdminUser ?? false;
+    print('🔍 AuthProvider.isAdmin: currentUser=${_currentUser?.id}, isAdminUser=$isAdminUser, result=$isAdminUser');
+    return isAdminUser;
+  }
 
   // Register user
   Future<bool> register({
@@ -71,7 +78,9 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
 
       if (result['success']) {
+        print('🔍 AuthProvider.login: API response data: ${result['data']}');
         _currentUser = UserModel.fromJson(result['data']);
+        print('🔍 AuthProvider.login: Created user model: id=${_currentUser?.id}, isAdmin=${_currentUser?.isAdmin}');
         _errorMessage = null;
         notifyListeners();
         return true;

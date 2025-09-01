@@ -7,9 +7,11 @@ import 'userManagement/profile_screen.dart';
 import 'home_page.dart';
 import 'hubs/hub_list.dart';
 import 'hubs/hub_apply.dart';
+import 'screens/admin_dashboard_screen.dart';
 import 'config/env_config.dart';
 import 'config/api_config.dart';
 import 'providers/auth_provider.dart';
+import 'examples/neumorphic_examples.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +59,8 @@ class MyApp extends StatelessWidget {
           '/home': (context) => const HomePage(),
           '/hub-list': (context) => const HubListPage(),
           '/hub-apply': (context) => const HubApplyPage(),
+          '/admin-dashboard': (context) => const AdminDashboardScreen(),
+          '/neumorphic-examples': (context) => const NeumorphicExamples(),
         },
       ),
     );

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import 'widgets/neumorphic_widgets.dart';
+import 'flutter_flow/neumorphic_theme.dart';
+import 'widgets/admin_navigation_menu.dart';
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,80 +25,137 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-      drawer: Drawer(
-        child: Container(
-          color: FlutterFlowTheme.of(context).primaryBackground,
-          child: ListView(
-            children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).primaryColor,
-                ),
-                child: Text(
-                  'BusinessHub',
-                  style: FlutterFlowTheme.of(context).title1.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+      backgroundColor: NeumorphicTheme.baseColor,
+      drawer: NeumorphicDrawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: FlutterFlowTheme.of(context).primaryColor,
+              ),
+              child: Text(
+                'BusinessHub',
+                style: FlutterFlowTheme.of(context).title1.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              ListTile(
-                leading: Icon(Icons.dashboard),
-                title: Text('Dashboard'),
-                onTap: () => Navigator.pop(context),
-              ),
-              ListTile(
-                leading: Icon(Icons.business),
-                title: Text('Hubs'),
-                onTap: () => Navigator.pop(context),
-              ),
-              ListTile(
-                leading: Icon(Icons.person),
-                title: Text('Profile'),
-                onTap: () => Navigator.pop(context),
-              ),
-            ],
-          ),
+            ),
+            NeumorphicListTile(
+              leading: Icon(Icons.dashboard),
+              title: Text('Dashboard'),
+              onTap: () => Navigator.pop(context),
+            ),
+            NeumorphicListTile(
+              leading: Icon(Icons.business),
+              title: Text('Hubs'),
+              onTap: () => Navigator.pop(context),
+            ),
+            NeumorphicListTile(
+              leading: Icon(Icons.person),
+              title: Text('Profile'),
+              onTap: () => Navigator.pop(context),
+            ),
+            // Admin Navigation Menu (only shows for admin users)
+            AdminNavigationMenu(),
+            // Debug info - remove this later
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                return ListTile(
+                  leading: Icon(Icons.bug_report, color: Colors.orange),
+                  title: Text('Debug Info'),
+                  subtitle: Text('User ID: ${authProvider.currentUser?.id ?? 'None'} | Admin: ${authProvider.isAdmin}'),
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('User ID: ${authProvider.currentUser?.id ?? 'None'} | Admin: ${authProvider.isAdmin}'),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
         ),
       ),
       body: SafeArea(
          child: Column(
            children: [
-             // Mobile App Bar
-             if (MediaQuery.of(context).size.width < 768)
-               Container(
-                 padding: EdgeInsets.all(16),
-                 decoration: BoxDecoration(
-                   color: FlutterFlowTheme.of(context).primaryBackground,
-                   boxShadow: [
-                     BoxShadow(
-                       blurRadius: 3,
-                       color: Color(0x33000000),
-                       offset: Offset(0, 1),
-                     ),
-                   ],
-                 ),
-                 child: Row(
-                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                   children: [
-                     IconButton(
-                       icon: Icon(Icons.menu),
-                       onPressed: () => scaffoldKey.currentState!.openDrawer(),
-                     ),
-                     Text(
-                       'BusinessHub',
-                       style: FlutterFlowTheme.of(context).title1.copyWith(
-                         fontWeight: FontWeight.bold,
-                       ),
-                     ),
-                     IconButton(
-                       icon: Icon(Icons.notifications),
-                       onPressed: () {},
-                     ),
-                   ],
-                 ),
-               ),
+                           // Mobile App Bar
+              if (MediaQuery.of(context).size.width < 768)
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).primaryBackground,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF989898),
+                        offset: const Offset(4, 4),
+                        blurRadius: 8,
+                      ),
+                      BoxShadow(
+                        color: const Color(0xFFFFFFFF),
+                        offset: const Offset(-4, -4),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).primaryBackground,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF989898),
+                              offset: const Offset(2, 2),
+                              blurRadius: 4,
+                            ),
+                            BoxShadow(
+                              color: const Color(0xFFFFFFFF),
+                              offset: const Offset(-2, -2),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.menu),
+                          onPressed: () => scaffoldKey.currentState!.openDrawer(),
+                        ),
+                      ),
+                      Text(
+                        'BusinessHub',
+                        style: FlutterFlowTheme.of(context).title1.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).primaryBackground,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF989898),
+                              offset: const Offset(2, 2),
+                              blurRadius: 4,
+                            ),
+                            BoxShadow(
+                              color: const Color(0xFFFFFFFF),
+                              offset: const Offset(-2, -2),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.notifications),
+                          onPressed: () {},
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
              // Main Content
              Expanded(
                child: Padding(
@@ -311,11 +373,23 @@ class _HomePageState extends State<HomePage> {
                      // Quick Stats
                      Container(
                        padding: EdgeInsets.all(16),
-                       decoration: BoxDecoration(
-                         color: FlutterFlowTheme.of(context).primaryBackground,
-                         borderRadius: BorderRadius.circular(12),
-                         border: Border.all(color: Color(0xFFE0E0E0)),
-                       ),
+                                               decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).primaryBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Color(0xFFE0E0E0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF989898),
+                              offset: const Offset(6, 6),
+                              blurRadius: 12,
+                            ),
+                            BoxShadow(
+                              color: const Color(0xFFFFFFFF),
+                              offset: const Offset(-6, -6),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
                        child: Column(
                          crossAxisAlignment: CrossAxisAlignment.start,
                          children: [
@@ -392,19 +466,24 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildHubCard(String title, String distance, String price, IconData icon) {
+    Widget _buildHubCard(String title, String distance, String price, IconData icon) {
     return Container(
       width: 170,
       height: 99,
       decoration: BoxDecoration(
-                                 color: FlutterFlowTheme.of(context).primaryBackground,
+        color: FlutterFlowTheme.of(context).primaryBackground,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            blurRadius: 1,
-            color: Color(0x0D000000),
-            offset: Offset(0, 1),
-          )
+            color: const Color(0xFF989898),
+            offset: const Offset(6, 6),
+            blurRadius: 12,
+          ),
+          BoxShadow(
+            color: const Color(0xFFFFFFFF),
+            offset: const Offset(-6, -6),
+            blurRadius: 12,
+          ),
         ],
       ),
       child: Padding(
@@ -495,9 +574,14 @@ class _HomePageState extends State<HomePage> {
           border: Border.all(color: Color(0xFFE0E0E0)),
           boxShadow: [
             BoxShadow(
-              blurRadius: 2,
-              color: Color(0x0A000000),
-              offset: Offset(0, 1),
+              color: const Color(0xFF989898),
+              offset: const Offset(8, 8),
+              blurRadius: 16,
+            ),
+            BoxShadow(
+              color: const Color(0xFFFFFFFF),
+              offset: const Offset(-8, -8),
+              blurRadius: 16,
             ),
           ],
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/neumorphic_widgets.dart';
 
 class Card2Widget extends StatelessWidget {
   final String text;
@@ -24,22 +25,14 @@ class Card2Widget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return NeumorphicContainer(
+      borderRadius: 20.0,
+      depth: 10.0,
+      baseColor: color,
       onTap: () => action(),
       child: Container(
         width: 170,
         height: 99,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(

@@ -7,6 +7,8 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/auth_manager.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/neumorphic_widgets.dart';
+import '../flutter_flow/neumorphic_theme.dart';
 import 'register_model.dart';
 export 'register_model.dart';
 
@@ -59,11 +61,11 @@ class _RegisterWidgetState extends State<RegisterWidget> {
     
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+      backgroundColor: NeumorphicTheme.baseColor,
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
-            color: FlutterFlowTheme.of(context).primaryBackground,
+            color: NeumorphicTheme.baseColor,
           ),
           child: isTablet && isLandscape
               ? _buildLandscapeLayout()
@@ -95,9 +97,14 @@ class _RegisterWidgetState extends State<RegisterWidget> {
               color: FlutterFlowTheme.of(context).primaryColor,
               boxShadow: [
                 BoxShadow(
-                  color: FlutterFlowTheme.of(context).primaryColor.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
+                  color: const Color(0xFF989898),
+                  offset: const Offset(24, 24),
+                  blurRadius: 47,
+                ),
+                BoxShadow(
+                  color: const Color(0xFFFFFFFF),
+                  offset: const Offset(-24, -24),
+                  blurRadius: 47,
                 ),
               ],
               border: Border.all(

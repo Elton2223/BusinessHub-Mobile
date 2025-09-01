@@ -99,7 +99,7 @@ The app uses the `provider` package for state management with an `AuthProvider` 
 - `logout()` - Clear authentication data
 - `checkAuthStatus()` - Check if user is logged in
 
-## User Model (`lib/models/user_model.dart`)
+## User Model (`lib/model/user_model.dart`)
 
 ```dart
 class UserModel {

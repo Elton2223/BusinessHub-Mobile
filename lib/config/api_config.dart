@@ -1,9 +1,10 @@
 class ApiConfig {
   // Base URL for the LoopBack4 API
-  static const String baseUrl = 'http://192.168.187.231:3005';
+  static const String baseUrl = 'http://10.207.128.100:3005';
 
   // API Endpoints
   static const String userManagementEndpoint = '/user-management';
+  static const String jobhubEndpoint = '/jobhub';
   
   // Timeout settings
   static const int connectionTimeout = 30000; // 30 seconds
@@ -22,5 +23,8 @@ class ApiConfig {
   
   // Get user management URL
   static String get userManagementUrl => getUrl(userManagementEndpoint);
+  
+  // Get jobhub URL
+  static String get jobhubUrl => getUrl(jobhubEndpoint);
    
 }

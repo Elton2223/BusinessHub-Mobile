@@ -7,6 +7,8 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/auth_manager.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/neumorphic_widgets.dart';
+import '../flutter_flow/neumorphic_theme.dart';
 import 'login_model.dart';
 export 'login_model.dart';
 
@@ -51,11 +53,11 @@ class _LoginWidgetState extends State<LoginWidget> {
     
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+      backgroundColor: NeumorphicTheme.baseColor,
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
-            color: FlutterFlowTheme.of(context).primaryBackground,
+            color: NeumorphicTheme.baseColor,
           ),
           child: isTablet && isLandscape
               ? _buildLandscapeLayout()
@@ -77,7 +79,7 @@ class _LoginWidgetState extends State<LoginWidget> {
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
-          // Logo Container
+                    // Logo Container
           Container(
             width: isTablet ? 150 : 120,
             height: isTablet ? 150 : 120,
@@ -87,9 +89,14 @@ class _LoginWidgetState extends State<LoginWidget> {
               color: FlutterFlowTheme.of(context).primaryColor,
               boxShadow: [
                 BoxShadow(
-                  color: FlutterFlowTheme.of(context).primaryColor.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
+                  color: const Color(0xFF989898),
+                  offset: const Offset(24, 24),
+                  blurRadius: 47,
+                ),
+                BoxShadow(
+                  color: const Color(0xFFFFFFFF),
+                  offset: const Offset(-24, -24),
+                  blurRadius: 47,
                 ),
               ],
               border: Border.all(
@@ -185,34 +192,58 @@ class _LoginWidgetState extends State<LoginWidget> {
                                   textAlign: TextAlign.center,
                                 ),
                               ),
-                            FFButtonWidget(
-                              onPressed: authProvider.isLoading
-                                  ? null
-                                  : () async {
-                                      if (_model.formKey.currentState?.validate() ?? false) {
-                                        final success = await authProvider.login(
-                                          email: _model.textController1!.text,
-                                          password: _model.textController2!.text,
-                                        );
-                                        
-                                        if (success) {
-                                          // Sign in with AuthManager for compatibility
-                                          AuthManager.signIn(_model.textController1!.text);
-                                          // Navigate to home page
-                                          Navigator.pushNamed(context, '/home');
-                                        }
-                                      }
-                                    },
-                              text: authProvider.isLoading ? 'Signing In...' : 'Sign In',
-                                                             options: FFButtonOptions(
-                                 width: double.infinity,
-                                 height: isTablet ? 60 : 50,
-                                 color: authProvider.isLoading ? Colors.grey : FlutterFlowTheme.of(context).primaryColor,
-                                 textColor: Colors.white,
-                                 borderColor: Colors.transparent,
-                                 borderWidth: 1,
-                                 borderRadius: isTablet ? 30 : 25,
-                               ),
+                            Container(
+                              width: double.infinity,
+                              height: isTablet ? 60 : 50,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(isTablet ? 30 : 25),
+                                color: authProvider.isLoading ? Colors.grey : FlutterFlowTheme.of(context).primaryColor,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF989898),
+                                    offset: const Offset(6, 6),
+                                    blurRadius: 12,
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(0xFFFFFFFF),
+                                    offset: const Offset(-6, -6),
+                                    blurRadius: 12,
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(isTablet ? 30 : 25),
+                                  onTap: authProvider.isLoading
+                                      ? null
+                                      : () async {
+                                          if (_model.formKey.currentState?.validate() ?? false) {
+                                            final success = await authProvider.login(
+                                              email: _model.textController1!.text,
+                                              password: _model.textController2!.text,
+                                            );
+                                            
+                                            if (success) {
+                                              // Sign in with AuthManager for compatibility
+                                              AuthManager.signIn(_model.textController1!.text);
+                                              // Navigate to home page
+                                              Navigator.pushNamed(context, '/home');
+                                            }
+                                          }
+                                        },
+                                  child: Center(
+                                    child: Text(
+                                      authProvider.isLoading ? 'Signing In...' : 'Sign In',
+                                      style: TextStyle(
+                                        fontSize: isTablet ? 18 : 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         );
@@ -469,6 +500,18 @@ class _LoginWidgetState extends State<LoginWidget> {
           color: FlutterFlowTheme.of(context).lineColor,
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF989898),
+            offset: const Offset(8, 8),
+            blurRadius: 16,
+          ),
+          BoxShadow(
+            color: const Color(0xFFFFFFFF),
+            offset: const Offset(-8, -8),
+            blurRadius: 16,
+          ),
+        ],
       ),
       child: TextFormField(
         controller: controller,
@@ -525,6 +568,18 @@ class _LoginWidgetState extends State<LoginWidget> {
           color: FlutterFlowTheme.of(context).lineColor,
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF989898),
+            offset: const Offset(8, 8),
+            blurRadius: 16,
+          ),
+          BoxShadow(
+            color: const Color(0xFFFFFFFF),
+            offset: const Offset(-8, -8),
+            blurRadius: 16,
+          ),
+        ],
       ),
       child: TextFormField(
         controller: controller,
