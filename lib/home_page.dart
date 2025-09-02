@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'utils/responsive_utils.dart';
 import 'utils/responsive_theme.dart';
+import 'services/jobhub_service.dart';
+import 'model/jobhub_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -264,6 +266,9 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
                      ),
                      SizedBox(height: 25),
                      // Active Hubs Section
+                     
+                     SizedBox(height: 25),
+                     // Available Jobhubs Section
                      Row(
                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                        children: [
@@ -276,7 +281,7 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
                            ),
                          ),
                          InkWell(
-                           onTap: () => Navigator.pushNamed(context, '/hub-apply'),
+                           onTap: () => Navigator.pushNamed(context, '/hub-list'),
                            child: Text(
                              'See more',
                              style: GoogleFonts.poppins(
@@ -289,18 +294,54 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
                        ],
                      ),
                      SizedBox(height: 15),
-                     // Hub Cards
-                     SingleChildScrollView(
-                       scrollDirection: Axis.horizontal,
-                       child: Row(
-                                                  children: [
-                            _buildHubCard('Cleaning Service', '2m away', 'R500', Icons.cleaning_services),
-                            SizedBox(width: 15),
-                            _buildHubCard('Maintaining pavement', '2m away', 'R5k', Icons.construction),
-                            SizedBox(width: 15),
-                            _buildHubCard('Mathematics tutor', '2m away', 'R380', Icons.school),
-                          ],
-                       ),
+                     // Available Jobhubs Cards
+                     FutureBuilder<List<dynamic>>(
+                       future: _loadAvailableJobhubs(),
+                       builder: (context, snapshot) {
+                         if (snapshot.connectionState == ConnectionState.waiting) {
+                           return const Center(
+                             child: Padding(
+                               padding: EdgeInsets.all(20),
+                               child: CircularProgressIndicator(),
+                             ),
+                           );
+                         }
+                         
+                         if (snapshot.hasError) {
+                           return Center(
+                             child: Padding(
+                               padding: const EdgeInsets.all(20),
+                               child: Text(
+                                 'Error loading available jobhubs',
+                                 style: TextStyle(color: Colors.red),
+                               ),
+                             ),
+                           );
+                         }
+                         
+                         final availableJobhubs = snapshot.data ?? [];
+                         
+                         if (availableJobhubs.isEmpty) {
+                           return Center(
+                             child: Padding(
+                               padding: const EdgeInsets.all(20),
+                               child: Text(
+                                 'No available jobhubs',
+                                 style: TextStyle(color: Colors.grey),
+                               ),
+                             ),
+                           );
+                         }
+                         
+                         return SingleChildScrollView(
+                           scrollDirection: Axis.horizontal,
+                           child: Row(
+                             children: availableJobhubs.take(3).map((jobhub) => 
+                               _buildAvailableJobhubCard(jobhub)
+                             ).toList(),
+                           ),
+                         );
+                       },
                      ),
                      SizedBox(height: 25),
                      Divider(),
@@ -794,6 +835,181 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Load available jobhubs from API
+  Future<List<dynamic>> _loadAvailableJobhubs() async {
+    try {
+      // Get available jobhubs from API (status = 1)
+      final availableJobhubs = await JobhubService.getAvailableJobhubs();
+      
+      // Convert to the format expected by the UI
+      return availableJobhubs.map((jobhub) => {
+        'title': jobhub.title,
+        'category': jobhub.category,
+        'payment': jobhub.formattedPaymentAmount,
+        'distance': 'Nearby',
+        'icon': _getCategoryIcon(jobhub.category),
+        'status': 'Available',
+        'jobhub': jobhub, // Keep reference to original model
+      }).toList();
+    } catch (e) {
+      print('Error loading available jobhubs: $e');
+      // Fallback to mock data if API fails
+      return [
+        {
+          'title': 'House Cleaning',
+          'category': 'Cleaning',
+          'payment': 'R350',
+          'distance': '1.2km away',
+          'icon': Icons.cleaning_services,
+          'status': 'Available',
+        },
+        {
+          'title': 'Garden Maintenance',
+          'category': 'Landscaping',
+          'payment': 'R450',
+          'distance': '0.8km away',
+          'icon': Icons.eco,
+          'status': 'Available',
+        },
+        {
+          'title': 'Tutoring Services',
+          'category': 'Education',
+          'payment': 'R200',
+          'distance': '2.1km away',
+          'icon': Icons.school,
+          'status': 'Available',
+        },
+      ];
+    }
+  }
+
+  // Helper method to get icon based on category
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'cleaning':
+        return Icons.cleaning_services;
+      case 'landscaping':
+      case 'garden':
+        return Icons.eco;
+      case 'education':
+      case 'tutoring':
+        return Icons.school;
+      case 'construction':
+        return Icons.construction;
+      case 'maintenance':
+        return Icons.build;
+      case 'delivery':
+        return Icons.delivery_dining;
+      case 'technology':
+        return Icons.computer;
+      default:
+        return Icons.work;
+    }
+  }
+
+  // Build available jobhub card
+  Widget _buildAvailableJobhubCard(Map<String, dynamic> jobhub) {
+    return Container(
+      width: 200,
+      height: 140,
+      margin: EdgeInsets.only(right: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Color(0xFF06C698), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF989898),
+            offset: const Offset(4, 4),
+            blurRadius: 8,
+          ),
+          BoxShadow(
+            color: const Color(0xFFFFFFFF),
+            offset: const Offset(-4, -4),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Color(0xFF06C698),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    jobhub['icon'] as IconData,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    jobhub['status'] as String,
+                    style: GoogleFonts.poppins(
+                      color: Color(0xFF06C698),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Text(
+              jobhub['title'] as String,
+              maxLines: 2,
+              style: GoogleFonts.poppins(
+                color: Color(0xFF111111),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              jobhub['category'] as String,
+              style: GoogleFonts.poppins(
+                color: Color(0xFF666666),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  jobhub['distance'] as String,
+                  style: GoogleFonts.poppins(
+                    color: Color(0xFF06C698),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  jobhub['payment'] as String,
+                  style: GoogleFonts.poppins(
+                    color: Color(0xFF111111),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

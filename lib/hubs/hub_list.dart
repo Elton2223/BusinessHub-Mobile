@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
+import '../model/jobhub_model.dart';
+import '../services/jobhub_service.dart';
 
 class HubListPage extends StatefulWidget {
   const HubListPage({super.key});
@@ -14,6 +16,62 @@ class HubListPage extends StatefulWidget {
 
 class _HubListPageState extends State<HubListPage> {
   String selectedFilter = 'All';
+  List<JobhubModel> allHubs = [];
+  List<JobhubModel> filteredHubs = [];
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHubs();
+  }
+
+  Future<void> _loadHubs() async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+
+      final hubs = await JobhubService.getAllJobhubs();
+      
+      setState(() {
+        allHubs = hubs;
+        filteredHubs = hubs;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = e.toString();
+        isLoading = false;
+      });
+    }
+  }
+
+  void _filterHubs(String filter) {
+    setState(() {
+      selectedFilter = filter;
+      switch (filter) {
+        case 'All':
+          filteredHubs = allHubs;
+          break;
+        case 'Your Area':
+          // Filter by location - you can customize this logic
+          filteredHubs = allHubs.where((hub) => 
+            hub.city.isNotEmpty || hub.state.isNotEmpty
+          ).toList();
+          break;
+        default:
+          filteredHubs = allHubs;
+      }
+    });
+  }
+
+  int get _allHubsCount => allHubs.length;
+  int get _areaHubsCount => allHubs.where((hub) => 
+    hub.city.isNotEmpty || hub.state.isNotEmpty
+  ).length;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +96,12 @@ class _HubListPageState extends State<HubListPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, color: Colors.white),
+            onPressed: _loadHubs,
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -48,31 +112,16 @@ class _HubListPageState extends State<HubListPage> {
               // Filter Buttons
               Row(
                 children: [
-                  _buildFilterButton('All', '123', true, isTablet),
+                  _buildFilterButton('All', _allHubsCount.toString(), selectedFilter == 'All', isTablet),
                   SizedBox(width: isTablet ? 16 : 12),
-                  _buildFilterButton('Your Area', '12', false, isTablet),
+                  _buildFilterButton('Your Area', _areaHubsCount.toString(), selectedFilter == 'Your Area', isTablet),
                 ],
               ),
               SizedBox(height: isTablet ? 32 : 24),
               
-              // Ongoing Task Section
-              Text(
-                'Ongoing Task',
-                style: GoogleFonts.poppins(
-                  color: Color(0xFF111111),
-                  fontSize: isTablet ? 22 : 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: isTablet ? 16 : 12),
-              _buildOngoingTaskCard(isTablet),
-              SizedBox(height: isTablet ? 32 : 24),
-              
-              // Job Listings
+              // Content Section
               Expanded(
-                child: isTablet && isLandscape
-                    ? _buildTabletLayout()
-                    : _buildMobileLayout(),
+                child: _buildContent(isTablet, isLandscape),
               ),
             ],
           ),
@@ -81,48 +130,130 @@ class _HubListPageState extends State<HubListPage> {
     );
   }
 
+  Widget _buildContent(bool isTablet, bool isLandscape) {
+    if (isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2C2C2C)),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Loading hubs...',
+              style: GoogleFonts.poppins(
+                fontSize: isTablet ? 18 : 16,
+                color: Color(0xFF666666),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: isTablet ? 80 : 60,
+              color: Colors.red,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Error loading hubs',
+              style: GoogleFonts.poppins(
+                fontSize: isTablet ? 20 : 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF111111),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              errorMessage!,
+              style: GoogleFonts.poppins(
+                fontSize: isTablet ? 16 : 14,
+                color: Color(0xFF666666),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadHubs,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF2C2C2C),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isTablet ? 24 : 20,
+                  vertical: isTablet ? 16 : 12,
+                ),
+              ),
+              child: Text(
+                'Retry',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: isTablet ? 16 : 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (filteredHubs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.work_outline,
+              size: isTablet ? 80 : 60,
+              color: Color(0xFF666666),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No hubs found',
+              style: GoogleFonts.poppins(
+                fontSize: isTablet ? 20 : 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF111111),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              selectedFilter == 'All' 
+                  ? 'There are no hubs available at the moment.'
+                  : 'No hubs found in your selected filter.',
+              style: GoogleFonts.poppins(
+                fontSize: isTablet ? 16 : 14,
+                color: Color(0xFF666666),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return isTablet && isLandscape
+        ? _buildTabletLayout()
+        : _buildMobileLayout();
+  }
+
   Widget _buildMobileLayout() {
-    return ListView(
-      children: [
-        _buildJobCard(
-          title: 'Tutoring math',
-          location: 'Market 42, st. Sraties, Lost Faramos',
-          address: '2464 Royal Ln. Mesa, New Jersey',
-          price: '\$51',
-          image: 'images/splash.jpeg',
-          buttonText: 'Task Completed',
-          buttonColor: Color(0xFF2C2C2C),
-          buttonIcon: Icons.arrow_forward,
-          status: 'completed',
-          isTablet: false,
-        ),
-        SizedBox(height: 16),
-        _buildJobCard(
-          title: 'Moving Help Needed',
-          location: 'Market 42, st. Sraties, Lost Faramos',
-          address: '',
-          price: 'R1 500.00',
-          image: 'images/splash.jpeg',
-          buttonText: 'Accept',
-          buttonColor: Color(0xFF06C698),
-          buttonIcon: Icons.access_time,
-          status: 'available',
-          isTablet: false,
-        ),
-        SizedBox(height: 16),
-        _buildJobCard(
-          title: 'Moving Help Needed',
-          location: 'Market 42, st. Sraties, Lost Faramos',
-          address: '',
-          price: 'R1 500.00',
-          image: 'images/splash.jpeg',
-          buttonText: 'View Task',
-          buttonColor: Color(0xFFFF9800),
-          buttonIcon: Icons.work,
-          status: 'viewable',
-          isTablet: false,
-        ),
-      ],
+    return ListView.builder(
+      itemCount: filteredHubs.length,
+      itemBuilder: (context, index) {
+        final hub = filteredHubs[index];
+        return Padding(
+          padding: EdgeInsets.only(bottom: 16),
+          child: _buildHubCard(hub, false),
+        );
+      },
     );
   }
 
@@ -134,65 +265,17 @@ class _HubListPageState extends State<HubListPage> {
         mainAxisSpacing: 20,
         childAspectRatio: 1.2,
       ),
-      itemCount: 3,
+      itemCount: filteredHubs.length,
       itemBuilder: (context, index) {
-        final jobs = [
-          {
-            'title': 'Tutoring math',
-            'location': 'Market 42, st. Sraties, Lost Faramos',
-            'address': '2464 Royal Ln. Mesa, New Jersey',
-            'price': '\$51',
-            'buttonText': 'Task Completed',
-            'buttonColor': Color(0xFF2C2C2C),
-            'buttonIcon': Icons.arrow_forward,
-            'status': 'completed',
-          },
-          {
-            'title': 'Moving Help Needed',
-            'location': 'Market 42, st. Sraties, Lost Faramos',
-            'address': '',
-            'price': 'R1 500.00',
-            'buttonText': 'Accept',
-            'buttonColor': Color(0xFF06C698),
-            'buttonIcon': Icons.access_time,
-            'status': 'available',
-          },
-          {
-            'title': 'Moving Help Needed',
-            'location': 'Market 42, st. Sraties, Lost Faramos',
-            'address': '',
-            'price': 'R1 500.00',
-            'buttonText': 'View Task',
-            'buttonColor': Color(0xFFFF9800),
-            'buttonIcon': Icons.work,
-            'status': 'viewable',
-          },
-        ];
-
-        final job = jobs[index];
-        return _buildJobCard(
-          title: job['title'] as String,
-          location: job['location'] as String,
-          address: job['address'] as String,
-          price: job['price'] as String,
-          image: 'images/splash.jpeg',
-          buttonText: job['buttonText'] as String,
-          buttonColor: job['buttonColor'] as Color,
-          buttonIcon: job['buttonIcon'] as IconData,
-          status: job['status'] as String,
-          isTablet: true,
-        );
+        final hub = filteredHubs[index];
+        return _buildHubCard(hub, true);
       },
     );
   }
 
   Widget _buildFilterButton(String text, String count, bool isSelected, bool isTablet) {
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedFilter = text;
-        });
-      },
+      onTap: () => _filterHubs(text),
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: isTablet ? 20 : 16,
@@ -241,74 +324,19 @@ class _HubListPageState extends State<HubListPage> {
     );
   }
 
-  Widget _buildOngoingTaskCard(bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isTablet ? 20 : 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
-        border: Border.all(color: Color(0xFFE0E0E0)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tutoring math',
-                  style: GoogleFonts.poppins(
-                    color: Color(0xFF111111),
-                    fontSize: isTablet ? 18 : 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: isTablet ? 6 : 4),
-                Text(
-                  'June 1, 2020, 08:22 AM',
-                  style: GoogleFonts.poppins(
-                    color: Color(0xFF666666),
-                    fontSize: isTablet ? 14 : 12,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.keyboard_arrow_down,
-            color: Color(0xFF666666),
-            size: isTablet ? 28 : 24,
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildHubCard(JobhubModel hub, bool isTablet) {
+    final buttonText = hub.jobStatusText;
+    final buttonColor = _getButtonColor(hub.jobStatus);
+    final buttonIcon = _getButtonIcon(hub.jobStatus);
 
-  Widget _buildJobCard({
-    required String title,
-    required String location,
-    required String address,
-    required String price,
-    required String image,
-    required String buttonText,
-    required Color buttonColor,
-    required IconData buttonIcon,
-    required String status,
-    required bool isTablet,
-  }) {
     return Container(
       padding: EdgeInsets.all(isTablet ? 20 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
         border: Border.all(
-          color: status == 'available' 
-              ? Color(0xFF06C698) 
-              : status == 'viewable' 
-                  ? Color(0xFFFF9800) 
-                  : Color(0xFFE0E0E0),
-          width: status == 'completed' ? 1 : 2,
+          color: _getBorderColor(hub.jobStatus),
+          width: hub.isCompleted ? 1 : 2,
         ),
         boxShadow: [
           BoxShadow(
@@ -323,31 +351,36 @@ class _HubListPageState extends State<HubListPage> {
         children: [
           Row(
             children: [
-              // Job Image
+              // Hub Image/Icon
               Container(
                 width: isTablet ? 80 : 60,
                 height: isTablet ? 80 : 60,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(isTablet ? 12 : 8),
-                  image: DecorationImage(
-                    image: AssetImage(image),
-                    fit: BoxFit.cover,
+                  color: Color(0xFFF5F5F5),
+                ),
+                child: Center(
+                  child: Text(
+                    hub.categoryIcon,
+                    style: TextStyle(fontSize: isTablet ? 32 : 24),
                   ),
                 ),
               ),
               SizedBox(width: isTablet ? 16 : 12),
-              // Job Details
+              // Hub Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      hub.title,
                       style: GoogleFonts.poppins(
                         color: Color(0xFF111111),
                         fontSize: isTablet ? 18 : 16,
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: isTablet ? 6 : 4),
                     Row(
@@ -360,36 +393,59 @@ class _HubListPageState extends State<HubListPage> {
                         SizedBox(width: isTablet ? 6 : 4),
                         Expanded(
                           child: Text(
-                            location,
+                            hub.fullAddress,
                             style: GoogleFonts.poppins(
                               color: Color(0xFF666666),
                               fontSize: isTablet ? 14 : 12,
                               fontWeight: FontWeight.w400,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
-                    if (address.isNotEmpty) ...[
-                      SizedBox(height: isTablet ? 4 : 2),
-                      Text(
-                        address,
-                        style: GoogleFonts.poppins(
+                    SizedBox(height: isTablet ? 6 : 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.category,
                           color: Color(0xFF666666),
-                          fontSize: isTablet ? 14 : 12,
-                          fontWeight: FontWeight.w400,
+                          size: isTablet ? 16 : 14,
                         ),
-                      ),
-                    ],
+                        SizedBox(width: isTablet ? 6 : 4),
+                        Text(
+                          hub.category,
+                          style: GoogleFonts.poppins(
+                            color: Color(0xFF666666),
+                            fontSize: isTablet ? 14 : 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: isTablet ? 6 : 4),
                     Text(
-                      price,
+                      hub.formattedPaymentAmount,
                       style: GoogleFonts.poppins(
                         color: Color(0xFF111111),
                         fontSize: isTablet ? 16 : 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    if (hub.description != null && hub.description!.isNotEmpty) ...[
+                      SizedBox(height: isTablet ? 6 : 4),
+                      Text(
+                        hub.description!,
+                        style: GoogleFonts.poppins(
+                          color: Color(0xFF666666),
+                          fontSize: isTablet ? 14 : 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -427,5 +483,44 @@ class _HubListPageState extends State<HubListPage> {
         ],
       ),
     );
+  }
+
+  Color _getButtonColor(int? jobStatus) {
+    switch (jobStatus) {
+      case 1: // Available
+        return Color(0xFF06C698);
+      case 2: // In Progress
+        return Color(0xFFFF9800);
+      case 3: // Completed
+        return Color(0xFF2C2C2C);
+      default:
+        return Color(0xFF666666);
+    }
+  }
+
+  IconData _getButtonIcon(int? jobStatus) {
+    switch (jobStatus) {
+      case 1: // Available
+        return Icons.access_time;
+      case 2: // In Progress
+        return Icons.work;
+      case 3: // Completed
+        return Icons.arrow_forward;
+      default:
+        return Icons.info;
+    }
+  }
+
+  Color _getBorderColor(int? jobStatus) {
+    switch (jobStatus) {
+      case 1: // Available
+        return Color(0xFF06C698);
+      case 2: // In Progress
+        return Color(0xFFFF9800);
+      case 3: // Completed
+        return Color(0xFFE0E0E0);
+      default:
+        return Color(0xFFE0E0E0);
+    }
   }
 }

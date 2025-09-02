@@ -54,6 +54,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Respon
   Future<void> _loadStatistics() async {
     try {
       final jobhubCount = await JobhubService.getJobhubCount();
+      final availableJobhubs = await JobhubService.getAvailableJobhubs();
       
       setState(() {
         _stats = {
@@ -61,6 +62,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Respon
           'totalJobhubs': jobhubCount,
           'activeUsers': 18, // Mock data
           'newUsers': 3, // Mock data
+          'availableJobhubs': availableJobhubs.length,
         };
       });
     } catch (e) {
@@ -128,6 +130,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Respon
                       _buildWelcomeSection(),
                       SizedBox(height: responsive.isExtraSmallScreen ? 6 : 8),
                       _buildStatisticsCards(),
+                      SizedBox(height: responsive.isExtraSmallScreen ? 6 : 8),
+                      _buildAvailableJobhubsSection(),
                       SizedBox(height: responsive.isExtraSmallScreen ? 6 : 8),
                       _buildRecentUsersSection(),
                       SizedBox(height: responsive.isExtraSmallScreen ? 6 : 8),
@@ -237,7 +241,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Respon
       child: GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: responsive.isExtraSmallScreen ? 1 : (responsive.isTablet ? 4 : 2),
+        crossAxisCount: responsive.isExtraSmallScreen ? 1 : (responsive.isTablet ? 5 : 2),
         crossAxisSpacing: responsive.isTablet ? 14 : (responsive.isExtraSmallScreen ? 5 : 8),
         mainAxisSpacing: responsive.isTablet ? 14 : (responsive.isExtraSmallScreen ? 5 : 8),
         childAspectRatio: responsive.isTablet ? 1.9 : (responsive.isExtraSmallScreen ? 2.4 : 1.6),
@@ -269,6 +273,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Respon
             Icons.work,
             Colors.purple,
             'Available spaces',
+          ),
+          _buildStatCard(
+            'Available Jobhubs',
+            '${_stats['availableJobhubs'] ?? 0}',
+            Icons.work_outline,
+            Colors.teal,
+            'Ready for work',
           ),
         ],
       ),
@@ -329,6 +340,192 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Respon
               fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvailableJobhubsSection() {
+    final responsive = context.responsive;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(responsive.isTablet ? 24 : 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 20 : 16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Available Jobhubs',
+                style: TextStyle(
+                  fontSize: responsive.isTablet ? 24 : 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Navigate to available jobhubs list
+                },
+                child: const Text('View all →'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          FutureBuilder<List<JobhubModel>>(
+            future: JobhubService.getAvailableJobhubs(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+              
+              if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Text(
+                      'Error loading available jobhubs: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                );
+              }
+              
+              final availableJobhubs = snapshot.data ?? [];
+              
+              if (availableJobhubs.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Text(
+                      'No available jobhubs',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                );
+              }
+              
+              return Column(
+                children: availableJobhubs.take(3).map((jobhub) => _buildAvailableJobhubItem(jobhub)).toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvailableJobhubItem(JobhubModel jobhub) {
+    final responsive = context.responsive;
+    return Container(
+      margin: EdgeInsets.only(bottom: responsive.isTablet ? 16 : 12),
+      padding: EdgeInsets.all(responsive.isTablet ? 16 : 12),
+      decoration: BoxDecoration(
+        color: Colors.teal[50],
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 16 : 12),
+        border: Border.all(color: Colors.teal[200]!, width: 1),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.teal[100],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: Text(
+                jobhub.categoryIcon,
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.teal[700],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  jobhub.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: responsive.isTablet ? 18 : 16,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  jobhub.category,
+                  style: TextStyle(
+                    color: Colors.teal[600],
+                    fontSize: responsive.isTablet ? 14 : 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  jobhub.description ?? 'No description available',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: responsive.isTablet ? 13 : 11,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.teal,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Available',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                jobhub.formattedPaymentAmount,
+                style: TextStyle(
+                  color: Colors.green[600],
+                  fontSize: responsive.isTablet ? 14 : 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ],
       ),
