@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '../model/jobhub_model.dart';
 import '../services/jobhub_service.dart';
+import 'dart:async';
 
 class HubListPage extends StatefulWidget {
   const HubListPage({super.key});
@@ -20,32 +21,83 @@ class _HubListPageState extends State<HubListPage> {
   List<JobhubModel> filteredHubs = [];
   bool isLoading = true;
   String? errorMessage;
+  bool _isAutoRefreshEnabled = true;
+  Timer? _autoRefreshTimer;
+  bool _isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
     _loadHubs();
+    _startAutoRefresh();
   }
 
-  Future<void> _loadHubs() async {
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startAutoRefresh() {
+    _autoRefreshTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (mounted && _isAutoRefreshEnabled && !_isRefreshing) {
+        _safeAutoRefresh();
+      }
+    });
+  }
+
+  void _safeAutoRefresh() async {
     try {
+      if (_isRefreshing) return;
+      
       setState(() {
-        isLoading = true;
-        errorMessage = null;
+        _isRefreshing = true;
       });
+      
+      await _loadHubs(silent: true);
+    } catch (e) {
+      // Handle auto-refresh errors silently to avoid spam
+      print('Auto-refresh error: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadHubs({bool silent = false}) async {
+    if (_isRefreshing && !silent) return;
+    
+    try {
+      if (!silent) {
+        setState(() {
+          isLoading = true;
+          errorMessage = null;
+        });
+      }
 
       final hubs = await JobhubService.getAllJobhubs();
       
-      setState(() {
-        allHubs = hubs;
-        filteredHubs = hubs;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          allHubs = hubs;
+          filteredHubs = hubs;
+          if (!silent) {
+            isLoading = false;
+          }
+        });
+      }
     } catch (e) {
-      setState(() {
-        errorMessage = e.toString();
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          if (!silent) {
+            isLoading = false;
+            errorMessage = e.toString();
+          }
+        });
+      }
     }
   }
 
@@ -96,12 +148,6 @@ class _HubListPageState extends State<HubListPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, color: Colors.white),
-            onPressed: _loadHubs,
-          ),
-        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -117,6 +163,8 @@ class _HubListPageState extends State<HubListPage> {
                   _buildFilterButton('Your Area', _areaHubsCount.toString(), selectedFilter == 'Your Area', isTablet),
                 ],
               ),
+              SizedBox(height: isTablet ? 16 : 12),
+              
               SizedBox(height: isTablet ? 32 : 24),
               
               // Content Section
