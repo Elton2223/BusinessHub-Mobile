@@ -48,17 +48,26 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
             NeumorphicListTile(
               leading: Icon(Icons.dashboard),
               title: Text('Dashboard'),
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.pushNamed(context, '/home'); // Navigate to home (dashboard)
+              },
             ),
             NeumorphicListTile(
               leading: Icon(Icons.business),
               title: Text('Hubs'),
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.pushNamed(context, '/hub-list'); // Navigate to hubs
+              },
             ),
             NeumorphicListTile(
               leading: Icon(Icons.person),
               title: Text('Profile'),
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.pushNamed(context, '/profile'); // Navigate to profile
+              },
             ),
             // Admin Navigation Menu (only shows for admin users)
             AdminNavigationMenu(),
