@@ -6,6 +6,8 @@ import '../model/user_model.dart';
 import '../model/jobhub_model.dart';
 import '../services/jobhub_service.dart';
 import '../widgets/admin_access_wrapper.dart';
+import '../utils/responsive_utils.dart';
+import '../utils/responsive_theme.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -14,7 +16,7 @@ class AdminDashboardScreen extends StatefulWidget {
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> with ResponsiveWidgetMixin {
   bool _isLoading = true;
   Map<String, dynamic> _stats = {};
   List<UserModel> _recentUsers = [];
@@ -94,6 +96,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return AdminAccessWrapper(
       adminContent: Scaffold(
         appBar: AppBar(
@@ -113,21 +116,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             : RefreshIndicator(
                 onRefresh: _loadDashboardData,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(
+                    responsive.isExtraSmallScreen ? 12 : 16,
+                    responsive.isExtraSmallScreen ? 12 : 16,
+                    responsive.isExtraSmallScreen ? 12 : 16,
+                    MediaQuery.of(context).padding.bottom + (responsive.isExtraSmallScreen ? 16 : 20), // Reduced bottom padding
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildWelcomeSection(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: responsive.isExtraSmallScreen ? 6 : 8),
                       _buildStatisticsCards(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: responsive.isExtraSmallScreen ? 6 : 8),
                       _buildRecentUsersSection(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: responsive.isExtraSmallScreen ? 6 : 8),
                       _buildRecentJobhubsSection(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: responsive.isExtraSmallScreen ? 6 : 8),
                       _buildQuickActionsSection(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: responsive.isExtraSmallScreen ? 6 : 8),
                       _buildSystemStatusSection(),
+                      // Add extra bottom spacing to prevent overflow
+                      SizedBox(height: responsive.isExtraSmallScreen ? 12 : 16),
+                      
+                      // Add responsive bottom safe area
+                      SizedBox(height: MediaQuery.of(context).padding.bottom + 4),
                     ],
                   ),
                 ),
@@ -139,66 +152,74 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildWelcomeSection() {
     final authProvider = context.read<AuthProvider>();
     final user = authProvider.currentUser;
+    final responsive = context.responsive;
     
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(responsive.isTablet ? 20 : 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.blue[600]!, Colors.blue[800]!],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 18 : 14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Welcome message spanning full width
+          Text(
+            'Welcome back, ${user?.name ?? 'Admin'}! 👋',
+            style: TextStyle(
+              fontSize: responsive.isTablet ? 32 : (responsive.isExtraSmallScreen ? 22 : 26),
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: responsive.isExtraSmallScreen ? 4 : 8),
+          Text(
+            'Here\'s what\'s happening with your BusinessHub today.',
+            style: TextStyle(
+              fontSize: responsive.isTablet ? 18 : (responsive.isExtraSmallScreen ? 14 : 16),
+              color: Colors.white70,
+            ),
+          ),
+          SizedBox(height: responsive.isExtraSmallScreen ? 8 : 12),
+          // Date and time in a smaller, less prominent section
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Expanded(
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.isTablet ? 16 : 12,
+                  vertical: responsive.isTablet ? 8 : 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(responsive.isTablet ? 12 : 8),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'Welcome back, ${user?.name ?? 'Admin'}! 👋',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      _getCurrentDate(),
+                      style: TextStyle(
+                        fontSize: responsive.isTablet ? 12 : 10,
+                        color: Colors.white70,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Here\'s what\'s happening with your BusinessHub today.',
+                    SizedBox(height: 2),
+                    Text(
+                      _getCurrentTime(),
                       style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
+                        fontSize: responsive.isTablet ? 14 : 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    _getCurrentDate(),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  Text(
-                    _getCurrentTime(),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -208,58 +229,65 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildStatisticsCards() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.2,
-      children: [
-        _buildStatCard(
-          'Total Users',
-          '${_stats['totalUsers'] ?? 0}',
-          Icons.people,
-          Colors.blue,
-          '${_stats['growthRate'] ?? 12}% growth',
-        ),
-        _buildStatCard(
-          'Active Users',
-          '${_stats['activeUsers'] ?? 0}',
-          Icons.check_circle,
-          Colors.green,
-          '${((_stats['activeUsers'] ?? 0) / (_stats['totalUsers'] ?? 1) * 100).round()}% engagement',
-        ),
-        _buildStatCard(
-          'New Users',
-          '${_stats['newUsers'] ?? 0}',
-          Icons.person_add,
-          Colors.orange,
-          'This month',
-        ),
-        _buildStatCard(
-          'Total Jobhubs',
-          '${_stats['totalJobhubs'] ?? 0}',
-          Icons.work,
-          Colors.purple,
-          'Available spaces',
-        ),
-      ],
+    final responsive = context.responsive;
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: responsive.isExtraSmallScreen ? 180 : (responsive.isTablet ? 280 : 230),
+      ),
+      child: GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: responsive.isExtraSmallScreen ? 1 : (responsive.isTablet ? 4 : 2),
+        crossAxisSpacing: responsive.isTablet ? 14 : (responsive.isExtraSmallScreen ? 5 : 8),
+        mainAxisSpacing: responsive.isTablet ? 14 : (responsive.isExtraSmallScreen ? 5 : 8),
+        childAspectRatio: responsive.isTablet ? 1.9 : (responsive.isExtraSmallScreen ? 2.4 : 1.6),
+        children: [
+          _buildStatCard(
+            'Total Users',
+            '${_stats['totalUsers'] ?? 0}',
+            Icons.people,
+            Colors.blue,
+            '${_stats['growthRate'] ?? 12}% growth',
+          ),
+          _buildStatCard(
+            'Active Users',
+            '${_stats['activeUsers'] ?? 0}',
+            Icons.check_circle,
+            Colors.green,
+            '${((_stats['activeUsers'] ?? 0) / (_stats['totalUsers'] ?? 1) * 100).round()}% engagement',
+          ),
+          _buildStatCard(
+            'New Users',
+            '${_stats['newUsers'] ?? 0}',
+            Icons.person_add,
+            Colors.orange,
+            'This month',
+          ),
+          _buildStatCard(
+            'Total Jobhubs',
+            '${_stats['totalJobhubs'] ?? 0}',
+            Icons.work,
+            Colors.purple,
+            'Available spaces',
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color, String subtitle) {
+    final responsive = context.responsive;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(responsive.isTablet ? 14 : 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 14 : 12),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -267,36 +295,36 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(responsive.isTablet ? 6 : 4),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: color, size: responsive.isTablet ? 18 : 16),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: responsive.isTablet ? 6 : 4),
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: responsive.isTablet ? 16 : 14,
               fontWeight: FontWeight.bold,
               color: Colors.grey[800],
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: responsive.isTablet ? 2 : 1),
           Text(
             title,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: responsive.isTablet ? 12 : 11,
               color: Colors.grey[600],
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: responsive.isTablet ? 4 : 3),
           Text(
             subtitle,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: responsive.isTablet ? 10 : 9,
               color: color,
               fontWeight: FontWeight.w500,
             ),
@@ -308,12 +336,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildRecentUsersSection() {
+    final responsive = context.responsive;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(responsive.isTablet ? 24 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 20 : 16),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -363,12 +392,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildUserItem(UserModel user) {
+    final responsive = context.responsive;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.only(bottom: responsive.isTablet ? 16 : 8),
+      padding: EdgeInsets.all(responsive.isTablet ? 16 : 12),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 16 : 12),
       ),
       child: Row(
         children: [
@@ -446,12 +476,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildRecentJobhubsSection() {
+    final responsive = context.responsive;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(responsive.isTablet ? 24 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 20 : 16),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -583,12 +614,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildQuickActionsSection() {
+    final responsive = context.responsive;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(responsive.isTablet ? 24 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 20 : 16),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -650,14 +682,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildQuickActionItem(String title, IconData icon, Color color, VoidCallback onTap) {
+    final responsive = context.responsive;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(responsive.isTablet ? 16 : 12),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(responsive.isTablet ? 20 : 12),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(responsive.isTablet ? 16 : 12),
         ),
         child: Row(
           children: [
@@ -686,12 +719,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildSystemStatusSection() {
+    final responsive = context.responsive;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(responsive.isTablet ? 24 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 20 : 16),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -723,11 +757,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildStatusItem(String service, String status, bool isOnline) {
+    final responsive = context.responsive;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(responsive.isTablet ? 16 : 10),
       decoration: BoxDecoration(
         color: isOnline ? Colors.green[50] : Colors.red[50],
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 12 : 8),
       ),
       child: Row(
         children: [

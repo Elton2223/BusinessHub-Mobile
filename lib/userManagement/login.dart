@@ -9,6 +9,9 @@ import '/flutter_flow/auth_manager.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/neumorphic_widgets.dart';
 import '../flutter_flow/neumorphic_theme.dart';
+import '../utils/responsive_utils.dart';
+import '../utils/responsive_theme.dart';
+import '../home_page.dart';
 import 'login_model.dart';
 export 'login_model.dart';
 
@@ -22,7 +25,7 @@ class LoginWidget extends StatefulWidget {
   State<LoginWidget> createState() => _LoginWidgetState();
 }
 
-class _LoginWidgetState extends State<LoginWidget> {
+class _LoginWidgetState extends State<LoginWidget> with ResponsiveWidgetMixin {
   late LoginModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -47,9 +50,8 @@ class _LoginWidgetState extends State<LoginWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isTablet = screenSize.width > 600;
-    final isLandscape = screenSize.width > screenSize.height;
+    final responsive = context.responsive;
+    final isLandscape = responsive.isLandscape;
     
     return Scaffold(
       key: scaffoldKey,
@@ -59,7 +61,7 @@ class _LoginWidgetState extends State<LoginWidget> {
           decoration: BoxDecoration(
             color: NeumorphicTheme.baseColor,
           ),
-          child: isTablet && isLandscape
+          child: responsive.isTablet && isLandscape
               ? _buildLandscapeLayout()
               : _buildPortraitLayout(),
         ),
@@ -68,24 +70,23 @@ class _LoginWidgetState extends State<LoginWidget> {
   }
 
   Widget _buildPortraitLayout() {
-    final screenSize = MediaQuery.of(context).size;
-    final isTablet = screenSize.width > 600;
+    final responsive = context.responsive;
     
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: isTablet ? 60 : 20,
-        vertical: isTablet ? 40 : 24,
+        horizontal: responsive.isTablet ? 60 : 20,
+        vertical: responsive.isTablet ? 40 : 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
-                    // Logo Container
+          // Logo Container
           Container(
-            width: isTablet ? 150 : 120,
-            height: isTablet ? 150 : 120,
-            margin: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 32 : 24),
+            width: responsive.isTablet ? 150 : 120,
+            height: responsive.isTablet ? 150 : 120,
+            margin: EdgeInsetsDirectional.fromSTEB(0, 0, 0, responsive.isTablet ? 32 : 24),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(isTablet ? 40 : 30),
+              borderRadius: BorderRadius.circular(responsive.isTablet ? 40 : 30),
               color: FlutterFlowTheme.of(context).primaryColor,
               boxShadow: [
                 BoxShadow(
@@ -107,7 +108,7 @@ class _LoginWidgetState extends State<LoginWidget> {
             child: Center(
               child: Icon(
                 Icons.business_center,
-                size: isTablet ? 70 : 50,
+                size: responsive.isTablet ? 70 : 50,
                 color: Colors.white,
               ),
             ),
@@ -118,7 +119,7 @@ class _LoginWidgetState extends State<LoginWidget> {
               'Welcome Back',
               style: FlutterFlowTheme.of(context).title1.copyWith(
                 color: FlutterFlowTheme.of(context).primaryText,
-                fontSize: isTablet ? 36 : 28,
+                fontSize: responsive.isTablet ? 36 : 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -126,12 +127,12 @@ class _LoginWidgetState extends State<LoginWidget> {
           Align(
             alignment: const AlignmentDirectional(0, 0),
             child: Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 16 : 12, 0, 0),
+              padding: EdgeInsetsDirectional.fromSTEB(0, responsive.isTablet ? 16 : 12, 0, 0),
               child: Text(
                 'Sign in to continue to BusinessHub',
                 style: FlutterFlowTheme.of(context).bodyText1.copyWith(
                   color: FlutterFlowTheme.of(context).secondaryText,
-                  fontSize: isTablet ? 18 : 16,
+                  fontSize: responsive.isTablet ? 18 : 16,
                   fontWeight: FontWeight.normal,
                 ),
               ),
@@ -146,24 +147,24 @@ class _LoginWidgetState extends State<LoginWidget> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 32 : 20, 0, isTablet ? 16 : 12),
+                      padding: EdgeInsetsDirectional.fromSTEB(0, responsive.isTablet ? 32 : 20, 0, responsive.isTablet ? 16 : 12),
                       child: _buildTextField(
-                        controller: _model.textController1,
-                        focusNode: _model.textFieldFocusNode1,
+                        controller: _model.textController1!,
+                        focusNode: _model.textFieldFocusNode1!,
                         label: 'Email',
                         hint: 'Enter your email',
                         keyboardType: TextInputType.emailAddress,
-                        validator: _model.textController1Validator,
+                        validator: (value) => _model.textController1Validator(context, value),
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 32 : 24),
+                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, responsive.isTablet ? 32 : 24),
                       child: _buildPasswordField(
-                        controller: _model.textController2,
-                        focusNode: _model.textFieldFocusNode2,
+                        controller: _model.textController2!,
+                        focusNode: _model.textFieldFocusNode2!,
                         label: 'Password',
                         hint: 'Enter your password',
-                        validator: _model.textController2Validator,
+                        validator: (value) => _model.textController2Validator(context, value),
                         isVisible: _model.passwordVisibility,
                         onVisibilityChanged: (value) {
                           setState(() {
@@ -194,9 +195,9 @@ class _LoginWidgetState extends State<LoginWidget> {
                               ),
                             Container(
                               width: double.infinity,
-                              height: isTablet ? 60 : 50,
+                              height: responsive.isTablet ? 60 : 50,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(isTablet ? 30 : 25),
+                                borderRadius: BorderRadius.circular(responsive.isTablet ? 30 : 25),
                                 color: authProvider.isLoading ? Colors.grey : FlutterFlowTheme.of(context).primaryColor,
                                 boxShadow: [
                                   BoxShadow(
@@ -211,72 +212,128 @@ class _LoginWidgetState extends State<LoginWidget> {
                                   ),
                                 ],
                               ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(isTablet ? 30 : 25),
-                                  onTap: authProvider.isLoading
-                                      ? null
-                                      : () async {
-                                          if (_model.formKey.currentState?.validate() ?? false) {
-                                            final success = await authProvider.login(
-                                              email: _model.textController1!.text,
-                                              password: _model.textController2!.text,
-                                            );
-                                            
-                                            if (success) {
-                                              // Sign in with AuthManager for compatibility
-                                              AuthManager.signIn(_model.textController1!.text);
-                                              // Navigate to home page
-                                              Navigator.pushNamed(context, '/home');
-                                            }
-                                          }
-                                        },
-                                  child: Center(
+                                                            child: ElevatedButton(
+                                onPressed: authProvider.isLoading ? null : () async {
+                                  print('🔍 Login button pressed');
+                                  print('🔍 Email: ${_model.textController1!.text}');
+                                  print('🔍 Password length: ${_model.textController2!.text.length}');
+                                  
+                                  if (_model.formKey.currentState?.validate() ?? false) {
+                                    print('🔍 Form validation passed');
+                                    final success = await authProvider.login(
+                                      email: _model.textController1!.text,
+                                      password: _model.textController2!.text,
+                                    );
+                                    
+                                    print('🔍 Login result: $success');
+                                    
+                                    if (success) {
+                                      print('🔍 Login successful, navigating to home');
+                                      print('🔍 Current context: $context');
+                                      print('🔍 Navigator: ${Navigator.of(context)}');
+                                      
+                                      // Show success message
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Login successful! Redirecting...'),
+                                          backgroundColor: Colors.green,
+                                          duration: Duration(seconds: 2),
+                                        ),
+                                      );
+                                      
+                                      // Try navigation with error handling
+                                      try {
+                                        print('🔍 Attempting navigation to /home');
+                                        Navigator.pushReplacementNamed(context, '/home');
+                                        print('🔍 Navigation completed successfully');
+                                      } catch (e) {
+                                        print('❌ Navigation error: $e');
+                                        // Fallback navigation
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => const HomePage()),
+                                        );
+                                      }
+                                    } else {
+                                      print('🔍 Login failed, error: ${authProvider.errorMessage}');
+                                      // Show error message
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Login failed: ${authProvider.errorMessage}'),
+                                          backgroundColor: Colors.red,
+                                          duration: Duration(seconds: 3),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    print('🔍 Form validation failed');
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  minimumSize: Size(
+                                    responsive.isTablet ? 200 : 160,
+                                    responsive.isTablet ? 60 : 50,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(responsive.isTablet ? 30 : 25),
+                                  ),
+                                ),
+                                child: authProvider.isLoading
+                                    ? SizedBox(
+                                        width: responsive.isTablet ? 24 : 20,
+                                        height: responsive.isTablet ? 24 : 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : Text(
+                                        'Sign In',
+                                        style: FlutterFlowTheme.of(context).title1.copyWith(
+                                          color: Colors.white,
+                                          fontSize: responsive.isTablet ? 18 : 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsetsDirectional.fromSTEB(0, responsive.isTablet ? 24 : 16, 0, 0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Don\'t have an account? ',
+                                    style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                                      color: FlutterFlowTheme.of(context).secondaryText,
+                                      fontSize: responsive.isTablet ? 16 : 14,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      Navigator.pushNamed(context, '/register');
+                                    },
                                     child: Text(
-                                      authProvider.isLoading ? 'Signing In...' : 'Sign In',
-                                      style: TextStyle(
-                                        fontSize: isTablet ? 18 : 16,
+                                      'Sign Up',
+                                      style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                                        color: FlutterFlowTheme.of(context).primaryColor,
+                                        fontSize: responsive.isTablet ? 16 : 14,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.white,
+                                        decoration: TextDecoration.underline,
                                       ),
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
                           ],
                         );
                       },
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 32 : 20, 0, 0),
-                      child: RichText(
-                        text: TextSpan(
-                          children: [
-                                                         TextSpan(
-                               text: 'Don\'t have an account? ',
-                               style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                                 color: FlutterFlowTheme.of(context).secondaryText,
-                                 fontSize: isTablet ? 16 : 14,
-                               ),
-                             ),
-                             TextSpan(
-                               text: 'Sign Up',
-                               style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                                 color: FlutterFlowTheme.of(context).primaryColor,
-                                 fontSize: isTablet ? 16 : 14,
-                                 fontWeight: FontWeight.bold,
-                               ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  // Navigate to register
-                                  Navigator.pushNamed(context, '/register');
-                                },
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -289,191 +346,237 @@ class _LoginWidgetState extends State<LoginWidget> {
   }
 
   Widget _buildLandscapeLayout() {
-    final screenSize = MediaQuery.of(context).size;
+    final responsive = context.responsive;
     
     return Row(
       children: [
-        // Left side - Logo and branding
         Expanded(
           flex: 1,
           child: Container(
-            padding: const EdgeInsets.all(40),
+            decoration: BoxDecoration(
+              color: FlutterFlowTheme.of(context).primaryColor,
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(responsive.isTablet ? 60 : 40),
+                bottomRight: Radius.circular(responsive.isTablet ? 60 : 40),
+              ),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.business_center,
+                    size: responsive.isTablet ? 120 : 100,
+                    color: Colors.white,
+                  ),
+                  SizedBox(height: responsive.isTablet ? 32 : 24),
+                  Text(
+                    'BusinessHub',
+                    style: FlutterFlowTheme.of(context).title1.copyWith(
+                      color: Colors.white,
+                      fontSize: responsive.isTablet ? 48 : 36,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: responsive.isTablet ? 16 : 12),
+                  Text(
+                    'Your Business, Our Priority',
+                    style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: responsive.isTablet ? 20 : 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 1,
+          child: Padding(
+            padding: EdgeInsets.all(responsive.isTablet ? 60 : 40),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo ContainerR
-                Container(
-                  width: 120,
-                  height: 120,
-                  margin: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 32),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: FlutterFlowTheme.of(context).primaryColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: FlutterFlowTheme.of(context).primaryColor.withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.business_center,
-                      size: 50,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
                 Text(
                   'Welcome Back',
                   style: FlutterFlowTheme.of(context).title1.copyWith(
                     color: FlutterFlowTheme.of(context).primaryText,
-                    fontSize: 32,
+                    fontSize: responsive.isTablet ? 36 : 28,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(0, 12, 0, 0),
-                  child: Text(
-                    'Sign in to continue to BusinessHub',
-                    style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                      color: FlutterFlowTheme.of(context).secondaryText,
-                      fontSize: 18,
-                      fontWeight: FontWeight.normal,
-                    ),
+                SizedBox(height: responsive.isTablet ? 16 : 12),
+                Text(
+                  'Sign in to continue to BusinessHub',
+                  style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                    fontSize: responsive.isTablet ? 18 : 16,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-        // Right side - Login form
-        Expanded(
-          flex: 1,
-          child: Container(
-            padding: const EdgeInsets.all(40),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: Form(
-                  key: _model.formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildTextField(
-                        controller: _model.textController1,
-                        focusNode: _model.textFieldFocusNode1,
-                        label: 'Email',
-                        hint: 'Enter your email',
-                        keyboardType: TextInputType.emailAddress,
-                        validator: _model.textController1Validator,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildPasswordField(
-                        controller: _model.textController2,
-                        focusNode: _model.textFieldFocusNode2,
-                        label: 'Password',
-                        hint: 'Enter your password',
-                        validator: _model.textController2Validator,
-                        isVisible: _model.passwordVisibility,
-                        onVisibilityChanged: (value) {
-                          setState(() {
-                            _model.passwordVisibility = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 30),
-                      Consumer<AuthProvider>(
-                        builder: (context, authProvider, child) {
-                          return Column(
-                            children: [
-                              if (authProvider.errorMessage != null)
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(12),
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.red.withOpacity(0.3)),
-                                  ),
-                                  child: Text(
-                                    authProvider.errorMessage!,
-                                    style: const TextStyle(color: Colors.red),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              FFButtonWidget(
-                                onPressed: authProvider.isLoading
-                                    ? null
-                                    : () async {
-                                        if (_model.formKey.currentState?.validate() ?? false) {
-                                          final success = await authProvider.login(
-                                            email: _model.textController1!.text,
-                                            password: _model.textController2!.text,
-                                          );
-                                          
-                                          if (success) {
-                                            // Sign in with AuthManager for compatibility
-                                            AuthManager.signIn(_model.textController1!.text);
-                                            // Navigate to profile page
-                                            Navigator.pushReplacementNamed(context, '/profile');
-                                          }
-                                        }
-                                      },
-                                text: authProvider.isLoading ? 'Signing In...' : 'Sign In',
-                                                                 options: FFButtonOptions(
-                                   width: double.infinity,
-                                   height: 50,
-                                   color: authProvider.isLoading ? Colors.grey : FlutterFlowTheme.of(context).primaryColor,
-                                   textColor: Colors.white,
-                                   borderColor: Colors.transparent,
-                                   borderWidth: 1,
-                                   borderRadius: 25,
-                                 ),
+                SizedBox(height: responsive.isTablet ? 40 : 32),
+                _buildTextField(
+                  controller: _model.textController1!,
+                  focusNode: _model.textFieldFocusNode1!,
+                  label: 'Email',
+                  hint: 'Enter your email',
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) => _model.textController1Validator(context, value),
+                ),
+                SizedBox(height: responsive.isTablet ? 24 : 16),
+                _buildPasswordField(
+                  controller: _model.textController2!,
+                  focusNode: _model.textFieldFocusNode2!,
+                  label: 'Password',
+                  hint: 'Enter your password',
+                  validator: (value) => _model.textController2Validator(context, value),
+                  isVisible: _model.passwordVisibility,
+                  onVisibilityChanged: (value) {
+                    setState(() {
+                      _model.passwordVisibility = value;
+                    });
+                  },
+                ),
+                SizedBox(height: responsive.isTablet ? 32 : 24),
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    return Column(
+                      children: [
+                        if (authProvider.errorMessage != null)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red.withOpacity(0.3)),
+                            ),
+                            child: Text(
+                              authProvider.errorMessage!,
+                              style: const TextStyle(color: Colors.red),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: responsive.isTablet ? 60 : 50,
+                          child: ElevatedButton(
+                            onPressed: authProvider.isLoading ? null : () async {
+                              print('🔍 Landscape login button pressed');
+                              print('🔍 Email: ${_model.textController1!.text}');
+                              print('🔍 Password length: ${_model.textController2!.text.length}');
+                              
+                              if (_model.formKey.currentState?.validate() ?? false) {
+                                print('🔍 Landscape form validation passed');
+                                final success = await authProvider.login(
+                                  email: _model.textController1!.text,
+                                  password: _model.textController2!.text,
+                                );
+                                
+                                print('🔍 Landscape login result: $success');
+                                
+                                if (success) {
+                                  print('🔍 Landscape login successful, navigating to home');
+                                  print('🔍 Current context: $context');
+                                  print('🔍 Navigator: ${Navigator.of(context)}');
+                                  
+                                  // Show success message
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Login successful! Redirecting...'),
+                                      backgroundColor: Colors.green,
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                  
+                                  // Try navigation with error handling
+                                  try {
+                                    print('🔍 Attempting landscape navigation to /home');
+                                    Navigator.pushReplacementNamed(context, '/home');
+                                    print('🔍 Landscape navigation completed successfully');
+                                  } catch (e) {
+                                    print('❌ Landscape navigation error: $e');
+                                    // Fallback navigation
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const HomePage()),
+                                    );
+                                  }
+                                } else {
+                                  print('🔍 Landscape login failed, error: ${authProvider.errorMessage}');
+                                  // Show error message
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Login failed: ${authProvider.errorMessage}'),
+                                      backgroundColor: Colors.red,
+                                      duration: Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                              } else {
+                                print('🔍 Landscape form validation failed');
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: FlutterFlowTheme.of(context).primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(responsive.isTablet ? 30 : 25),
                               ),
-                            ],
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      RichText(
-                        textAlign: TextAlign.center,
-                        text: TextSpan(
+                            ),
+                            child: authProvider.isLoading
+                                ? SizedBox(
+                                    width: responsive.isTablet ? 24 : 20,
+                                    height: responsive.isTablet ? 24 : 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    'Sign In',
+                                    style: FlutterFlowTheme.of(context).title1.copyWith(
+                                      color: Colors.white,
+                                      fontSize: responsive.isTablet ? 18 : 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        SizedBox(height: responsive.isTablet ? 24 : 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                                                         TextSpan(
-                               text: 'Don\'t have an account? ',
-                               style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                                 color: FlutterFlowTheme.of(context).secondaryText,
-                                 fontSize: 14,
-                               ),
-                             ),
-                             TextSpan(
-                               text: 'Sign Up',
-                               style: FlutterFlowTheme.of(context).bodyText1.copyWith(
-                                 color: FlutterFlowTheme.of(context).primaryColor,
-                                 fontSize: 14,
-                                 fontWeight: FontWeight.bold,
-                               ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  // Navigate to register
-                                  Navigator.pushNamed(context, '/register');
-                                },
+                            Text(
+                              'Don\'t have an account? ',
+                              style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                                color: FlutterFlowTheme.of(context).secondaryText,
+                                fontSize: responsive.isTablet ? 16 : 14,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                Navigator.pushNamed(context, '/register');
+                              },
+                              child: Text(
+                                'Sign Up',
+                                style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                                  color: FlutterFlowTheme.of(context).primaryColor,
+                                  fontSize: responsive.isTablet ? 16 : 14,
+                                  fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    );
+                  },
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -482,102 +585,84 @@ class _LoginWidgetState extends State<LoginWidget> {
   }
 
   Widget _buildTextField({
-    required TextEditingController? controller,
-    required FocusNode? focusNode,
+    required TextEditingController controller,
+    required FocusNode focusNode,
     required String label,
     required String hint,
     TextInputType? keyboardType,
-    String? Function(BuildContext, String?)? validator,
+    String? Function(String?)? validator,
   }) {
-    final screenSize = MediaQuery.of(context).size;
-    final isTablet = screenSize.width > 600;
+    final responsive = context.responsive;
     
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
-        color: Colors.grey[100],
-        border: Border.all(
-          color: FlutterFlowTheme.of(context).lineColor,
-          width: 1,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 20 : 16),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF989898),
-            offset: const Offset(8, 8),
-            blurRadius: 16,
+            offset: const Offset(4, 4),
+            blurRadius: 8,
           ),
           BoxShadow(
             color: const Color(0xFFFFFFFF),
-            offset: const Offset(-8, -8),
-            blurRadius: 16,
+            offset: const Offset(-4, -4),
+            blurRadius: 8,
           ),
         ],
       ),
       child: TextFormField(
         controller: controller,
         focusNode: focusNode,
-        obscureText: false,
         keyboardType: keyboardType,
-        style: TextStyle(
-          color: FlutterFlowTheme.of(context).primaryText,
-          fontSize: isTablet ? 18 : 16,
-        ),
+        validator: validator,
         decoration: InputDecoration(
           labelText: label,
+          hintText: hint,
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.all(responsive.isTablet ? 20 : 16),
           labelStyle: TextStyle(
             color: FlutterFlowTheme.of(context).secondaryText,
-            fontSize: isTablet ? 16 : 14,
+            fontSize: responsive.isTablet ? 16 : 14,
           ),
-          hintText: hint,
           hintStyle: TextStyle(
-            color: FlutterFlowTheme.of(context).secondaryText.withOpacity(0.7),
-            fontSize: isTablet ? 16 : 14,
+            color: FlutterFlowTheme.of(context).secondaryText.withOpacity(0.5),
+            fontSize: responsive.isTablet ? 16 : 14,
           ),
-          border: InputBorder.none,
-          contentPadding: EdgeInsetsDirectional.fromSTEB(
-            isTablet ? 20 : 16,
-            isTablet ? 20 : 16,
-            isTablet ? 20 : 16,
-            isTablet ? 20 : 16,
-          ),
-          alignLabelWithHint: true,
         ),
-        textAlign: TextAlign.center,
-        validator: validator != null ? (value) => validator(context, value) : null,
+        style: TextStyle(
+          color: FlutterFlowTheme.of(context).primaryText,
+          fontSize: responsive.isTablet ? 16 : 14,
+        ),
       ),
     );
   }
 
   Widget _buildPasswordField({
-    required TextEditingController? controller,
-    required FocusNode? focusNode,
+    required TextEditingController controller,
+    required FocusNode focusNode,
     required String label,
     required String hint,
+    required String? Function(String?)? validator,
     required bool isVisible,
     required Function(bool) onVisibilityChanged,
-    String? Function(BuildContext, String?)? validator,
   }) {
-    final screenSize = MediaQuery.of(context).size;
-    final isTablet = screenSize.width > 600;
+    final responsive = context.responsive;
     
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
-        color: Colors.grey[100],
-        border: Border.all(
-          color: FlutterFlowTheme.of(context).lineColor,
-          width: 1,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 20 : 16),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF989898),
-            offset: const Offset(8, 8),
-            blurRadius: 16,
+            offset: const Offset(4, 4),
+            blurRadius: 8,
           ),
           BoxShadow(
             color: const Color(0xFFFFFFFF),
-            offset: const Offset(-8, -8),
-            blurRadius: 16,
+            offset: const Offset(-4, -4),
+            blurRadius: 8,
           ),
         ],
       ),
@@ -585,40 +670,33 @@ class _LoginWidgetState extends State<LoginWidget> {
         controller: controller,
         focusNode: focusNode,
         obscureText: !isVisible,
-        style: TextStyle(
-          color: FlutterFlowTheme.of(context).primaryText,
-          fontSize: isTablet ? 18 : 16,
-        ),
+        validator: validator,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(
-            color: FlutterFlowTheme.of(context).secondaryText,
-            fontSize: isTablet ? 16 : 14,
-          ),
           hintText: hint,
-          hintStyle: TextStyle(
-            color: FlutterFlowTheme.of(context).secondaryText.withOpacity(0.7),
-            fontSize: isTablet ? 16 : 14,
-          ),
           border: InputBorder.none,
-          contentPadding: EdgeInsetsDirectional.fromSTEB(
-            isTablet ? 20 : 16,
-            isTablet ? 20 : 16,
-            isTablet ? 20 : 16,
-            isTablet ? 20 : 16,
-          ),
-          alignLabelWithHint: true,
+          contentPadding: EdgeInsets.all(responsive.isTablet ? 20 : 16),
           suffixIcon: IconButton(
             icon: Icon(
               isVisible ? Icons.visibility : Icons.visibility_off,
               color: FlutterFlowTheme.of(context).secondaryText,
-              size: isTablet ? 24 : 20,
+              size: responsive.isTablet ? 24 : 20,
             ),
             onPressed: () => onVisibilityChanged(!isVisible),
           ),
+          labelStyle: TextStyle(
+            color: FlutterFlowTheme.of(context).secondaryText,
+            fontSize: responsive.isTablet ? 16 : 14,
+          ),
+          hintStyle: TextStyle(
+            color: FlutterFlowTheme.of(context).secondaryText.withOpacity(0.5),
+            fontSize: responsive.isTablet ? 16 : 14,
+          ),
         ),
-        textAlign: TextAlign.center,
-        validator: validator != null ? (value) => validator(context, value) : null,
+        style: TextStyle(
+          color: FlutterFlowTheme.of(context).primaryText,
+          fontSize: responsive.isTablet ? 16 : 14,
+        ),
       ),
     );
   }

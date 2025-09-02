@@ -37,7 +37,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider()..initialize(),
+        ),
       ],
       child: MaterialApp(
         title: 'BusinessHub Mobile',
@@ -50,7 +52,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           fontFamily: 'GoogleFonts.poppins',
         ),
-        home: const LoginWidget(),
+        home: const AuthWrapper(),
         routes: {
           '/verify_email': (context) => const VerifyEmailScreen(),
           '/login': (context) => const LoginWidget(),
@@ -63,6 +65,39 @@ class MyApp extends StatelessWidget {
           '/neumorphic-examples': (context) => const NeumorphicExamples(),
         },
       ),
+    );
+  }
+}
+
+// Wrapper to check authentication state and redirect accordingly
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        // Show loading while checking auth status
+        if (authProvider.isLoading) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        
+        // If user is logged in, go to home page
+        if (authProvider.currentUser != null) {
+          print('🔍 AuthWrapper: User is logged in, redirecting to home');
+          print('🔍 AuthWrapper: User ID: ${authProvider.currentUser?.id}');
+          print('🔍 AuthWrapper: User isAdmin: ${authProvider.currentUser?.isAdmin}');
+          return const HomePage();
+        }
+        
+        // If no user, show login page
+        print('🔍 AuthWrapper: No user logged in, showing login page');
+        return const LoginWidget();
+      },
     );
   }
 }

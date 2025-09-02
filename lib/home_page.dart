@@ -7,6 +7,8 @@ import 'flutter_flow/neumorphic_theme.dart';
 import 'widgets/admin_navigation_menu.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'utils/responsive_utils.dart';
+import 'utils/responsive_theme.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +20,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -58,23 +60,6 @@ class _HomePageState extends State<HomePage> {
             ),
             // Admin Navigation Menu (only shows for admin users)
             AdminNavigationMenu(),
-            // Debug info - remove this later
-            Consumer<AuthProvider>(
-              builder: (context, authProvider, child) {
-                return ListTile(
-                  leading: Icon(Icons.bug_report, color: Colors.orange),
-                  title: Text('Debug Info'),
-                  subtitle: Text('User ID: ${authProvider.currentUser?.id ?? 'None'} | Admin: ${authProvider.isAdmin}'),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('User ID: ${authProvider.currentUser?.id ?? 'None'} | Admin: ${authProvider.isAdmin}'),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
           ],
         ),
       ),
@@ -82,7 +67,7 @@ class _HomePageState extends State<HomePage> {
          child: Column(
            children: [
                            // Mobile App Bar
-              if (MediaQuery.of(context).size.width < 768)
+              if (responsive.isPhone)
                 Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(

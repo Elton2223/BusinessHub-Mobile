@@ -9,6 +9,8 @@ import '/flutter_flow/auth_manager.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/neumorphic_widgets.dart';
 import '../flutter_flow/neumorphic_theme.dart';
+import '../utils/responsive_utils.dart';
+import '../utils/responsive_theme.dart';
 import 'register_model.dart';
 export 'register_model.dart';
 
@@ -22,7 +24,7 @@ class RegisterWidget extends StatefulWidget {
   State<RegisterWidget> createState() => _RegisterWidgetState();
 }
 
-class _RegisterWidgetState extends State<RegisterWidget> {
+class _RegisterWidgetState extends State<RegisterWidget> with ResponsiveWidgetMixin {
   late RegisterModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -55,9 +57,8 @@ class _RegisterWidgetState extends State<RegisterWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isTablet = screenSize.width > 600;
-    final isLandscape = screenSize.width > screenSize.height;
+    final responsive = context.responsive;
+    final isLandscape = responsive.isLandscape;
     
     return Scaffold(
       key: scaffoldKey,
@@ -67,7 +68,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
           decoration: BoxDecoration(
             color: NeumorphicTheme.baseColor,
           ),
-          child: isTablet && isLandscape
+          child: responsive.isTablet && isLandscape
               ? _buildLandscapeLayout()
               : _buildPortraitLayout(),
         ),
@@ -76,24 +77,23 @@ class _RegisterWidgetState extends State<RegisterWidget> {
   }
 
   Widget _buildPortraitLayout() {
-    final screenSize = MediaQuery.of(context).size;
-    final isTablet = screenSize.width > 600;
+    final responsive = context.responsive;
     
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: isTablet ? 60 : 20,
-        vertical: isTablet ? 40 : 24,
+        horizontal: responsive.isTablet ? 60 : 20,
+        vertical: responsive.isTablet ? 40 : 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
           // Logo Container
           Container(
-            width: isTablet ? 150 : 120,
-            height: isTablet ? 150 : 120,
-            margin: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 32 : 24),
+            width: responsive.isTablet ? 150 : 120,
+            height: responsive.isTablet ? 150 : 120,
+            margin: EdgeInsetsDirectional.fromSTEB(0, 0, 0, responsive.isTablet ? 32 : 24),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(isTablet ? 40 : 30),
+              borderRadius: BorderRadius.circular(responsive.isTablet ? 40 : 30),
               color: FlutterFlowTheme.of(context).primaryColor,
               boxShadow: [
                 BoxShadow(
@@ -115,7 +115,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
             child: Center(
               child: Icon(
                 Icons.business_center,
-                size: isTablet ? 70 : 50,
+                size: responsive.isTablet ? 70 : 50,
                 color: Colors.white,
               ),
             ),
@@ -126,7 +126,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
               'Create Account',
               style: FlutterFlowTheme.of(context).title1.copyWith(
                 color: FlutterFlowTheme.of(context).primaryText,
-                fontSize: isTablet ? 36 : 28,
+                fontSize: responsive.isTablet ? 36 : 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -134,13 +134,13 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                      Align(
              alignment: const AlignmentDirectional(0, 0),
              child: Padding(
-               padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 16 : 12, 0, 0),
+               padding: EdgeInsetsDirectional.fromSTEB(0, responsive.isTablet ? 16 : 12, 0, 0),
                child: Text(
                  'Join BusinessHub and find jobs/create jobs in your area',
                  textAlign: TextAlign.center,
                  style: FlutterFlowTheme.of(context).bodyText1.copyWith(
                    color: FlutterFlowTheme.of(context).secondaryText,
-                   fontSize: isTablet ? 18 : 16,
+                   fontSize: responsive.isTablet ? 18 : 16,
                    fontWeight: FontWeight.normal,
                  ),
                ),
@@ -155,7 +155,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                                          Padding(
-                       padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 32 : 20, 0, isTablet ? 16 : 12),
+                       padding: EdgeInsetsDirectional.fromSTEB(0, responsive.isTablet ? 32 : 20, 0, responsive.isTablet ? 16 : 12),
                        child: _buildTextField(
                          controller: _model.textController1,
                          focusNode: _model.textFieldFocusNode1,
@@ -165,7 +165,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                        ),
                      ),
                      Padding(
-                       padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
+                       padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, responsive.isTablet ? 16 : 12),
                        child: _buildTextField(
                          controller: _model.textController6,
                          focusNode: _model.textFieldFocusNode6,
@@ -175,7 +175,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                        ),
                      ),
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
+                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, responsive.isTablet ? 16 : 12),
                       child: _buildTextField(
                         controller: _model.textController2,
                         focusNode: _model.textFieldFocusNode2,
@@ -186,7 +186,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
+                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, responsive.isTablet ? 16 : 12),
                       child: _buildTextField(
                         controller: _model.textController3,
                         focusNode: _model.textFieldFocusNode3,
@@ -197,7 +197,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 16 : 12),
+                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, responsive.isTablet ? 16 : 12),
                       child: _buildPasswordField(
                         controller: _model.textController4,
                         focusNode: _model.textFieldFocusNode4,
@@ -213,7 +213,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, isTablet ? 32 : 24),
+                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, responsive.isTablet ? 32 : 24),
                       child: _buildPasswordField(
                         controller: _model.textController5,
                         focusNode: _model.textFieldFocusNode5,
@@ -275,12 +275,12 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                               text: authProvider.isLoading ? 'Creating Account...' : 'Create Account',
                                                              options: FFButtonOptions(
                                  width: double.infinity,
-                                 height: isTablet ? 60 : 50,
+                                 height: responsive.isTablet ? 60 : 50,
                                  color: authProvider.isLoading ? Colors.grey : FlutterFlowTheme.of(context).primaryColor,
                                  textColor: Colors.white,
                                  borderColor: Colors.transparent,
                                  borderWidth: 1,
-                                 borderRadius: isTablet ? 30 : 25,
+                                 borderRadius: responsive.isTablet ? 30 : 25,
                                ),
                             ),
                           ],
@@ -288,7 +288,7 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                       },
                     ),
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, isTablet ? 32 : 20, 0, 0),
+                      padding: EdgeInsetsDirectional.fromSTEB(0, responsive.isTablet  ? 32 : 20, 0, 0),
                       child: RichText(
                         text: TextSpan(
                           children: [
@@ -296,14 +296,14 @@ class _RegisterWidgetState extends State<RegisterWidget> {
                                text: 'Already have an account? ',
                                style: FlutterFlowTheme.of(context).bodyText1.copyWith(
                                  color: FlutterFlowTheme.of(context).secondaryText,
-                                 fontSize: isTablet ? 16 : 14,
+                                 fontSize: responsive.isTablet ? 16 : 14,
                                ),
                              ),
                              TextSpan(
                                text: 'Sign In',
                                style: FlutterFlowTheme.of(context).bodyText1.copyWith(
                                  color: FlutterFlowTheme.of(context).primaryColor,
-                                 fontSize: isTablet ? 16 : 14,
+                                 fontSize: responsive.isTablet ? 16 : 14,
                                  fontWeight: FontWeight.bold,
                                ),
                               recognizer: TapGestureRecognizer()

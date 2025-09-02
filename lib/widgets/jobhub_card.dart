@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../model/jobhub_model.dart';
+import '../utils/responsive_utils.dart';
+import '../utils/responsive_theme.dart';
 
 class JobhubCard extends StatelessWidget {
   final JobhubModel jobhub;
@@ -15,17 +17,22 @@ class JobhubCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(
+        horizontal: responsive.isTablet ? 20 : 16, 
+        vertical: responsive.isTablet ? 12 : 8
+      ),
       elevation: 4,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 16 : 12),
       ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(responsive.isTablet ? 20 : 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -34,7 +41,7 @@ class JobhubCard extends StatelessWidget {
                 children: [
                   Text(
                     jobhub.categoryIcon,
-                    style: const TextStyle(fontSize: 24),
+                    style: TextStyle(fontSize: responsive.isTablet ? 28 : 24),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -43,8 +50,8 @@ class JobhubCard extends StatelessWidget {
                       children: [
                         Text(
                           jobhub.title,
-                          style: const TextStyle(
-                            fontSize: 18,
+                          style: TextStyle(
+                            fontSize: responsive.isTablet ? 20 : 18,
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 2,

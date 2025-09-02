@@ -10,6 +10,8 @@ import '../model/user_model.dart';
 import '../flutter_flow/flutter_flow_theme.dart';
 import '../widgets/neumorphic_widgets.dart';
 import '../flutter_flow/neumorphic_theme.dart';
+import '../utils/responsive_utils.dart';
+import '../utils/responsive_theme.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({Key? key}) : super(key: key);
@@ -18,7 +20,7 @@ class EditProfileScreen extends StatefulWidget {
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _EditProfileScreenState extends State<EditProfileScreen> with ResponsiveWidgetMixin {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _identificationController = TextEditingController();

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../screens/admin_dashboard_screen.dart';
+import '../utils/responsive_utils.dart';
+import '../utils/responsive_theme.dart';
 
 class AdminNavigationMenu extends StatelessWidget {
   const AdminNavigationMenu({Key? key}) : super(key: key);
@@ -30,13 +32,20 @@ class AdminNavigationMenu extends StatelessWidget {
         
         print('🔍 AdminNavigationMenu: User is admin, showing menu');
 
+        final responsive = context.responsive;
+        
         return ExpansionTile(
-          leading: const Icon(Icons.admin_panel_settings, color: Colors.blue),
-          title: const Text(
+          leading: Icon(
+            Icons.admin_panel_settings, 
+            color: Colors.blue,
+            size: responsive.isTablet ? 24 : 20,
+          ),
+          title: Text(
             'Admin Panel',
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: Colors.blue,
+              fontSize: responsive.isTablet ? 16 : 14,
             ),
           ),
           children: [

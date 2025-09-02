@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/jobhub_provider.dart';
 import '../widgets/jobhub_card.dart';
 import '../model/jobhub_model.dart';
+import '../utils/responsive_utils.dart';
+import '../utils/responsive_theme.dart';
 
 class JobhubListScreen extends StatefulWidget {
   final String? title;
@@ -22,7 +24,7 @@ class JobhubListScreen extends StatefulWidget {
   State<JobhubListScreen> createState() => _JobhubListScreenState();
 }
 
-class _JobhubListScreenState extends State<JobhubListScreen> {
+class _JobhubListScreenState extends State<JobhubListScreen> with ResponsiveWidgetMixin {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'All';
   String _selectedStatus = 'All';
