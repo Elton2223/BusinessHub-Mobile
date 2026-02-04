@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import '/flutter_flow/auth_manager.dart';
-import '../providers/auth_provider.dart';
-import '../widgets/neumorphic_widgets.dart';
 import '../flutter_flow/neumorphic_theme.dart';
+import '../providers/auth_provider.dart';
 import '../utils/responsive_utils.dart';
-import '../utils/responsive_theme.dart';
 import '../home_page.dart';
 import 'login_model.dart';
 export 'login_model.dart';

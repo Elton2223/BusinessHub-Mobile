@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class AuthManager {
   static bool isAuthenticated = false;
   static String? currentUserEmail;

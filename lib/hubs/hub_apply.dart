@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
-import '../widgets/neumorphic_widgets.dart';
-import '../flutter_flow/neumorphic_theme.dart';
 
 class HubApplyPage extends StatefulWidget {
   const HubApplyPage({super.key});
@@ -30,6 +28,27 @@ class _HubApplyPageState extends State<HubApplyPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
+    final isLaptop = screenWidth > 900;
+    final isDesktop = screenWidth > 1200;
+    
+    // Responsive grid columns
+    int getCrossAxisCount() {
+      if (isDesktop) return 4;
+      if (isLaptop) return 3;
+      if (isTablet) return 2;
+      return 1;
+    }
+    
+    // Responsive aspect ratio
+    double getAspectRatio() {
+      if (isDesktop) return 0.85;
+      if (isLaptop) return 0.8;
+      if (isTablet) return 0.75;
+      return 0.7;
+    }
+    
     return Scaffold(
       backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
       appBar: AppBar(
@@ -43,28 +62,28 @@ class _HubApplyPageState extends State<HubApplyPage> {
           'Available Hubs',
           style: GoogleFonts.poppins(
             color: Colors.white,
-            fontSize: 20,
+            fontSize: isTablet ? 24 : 20,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(isTablet ? 24 : 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Filter Section
               Container(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(isTablet ? 20 : 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
                   boxShadow: [
                     BoxShadow(
-                      blurRadius: 2,
+                      blurRadius: 4,
                       color: Color(0x0A000000),
-                      offset: Offset(0, 1),
+                      offset: Offset(0, 2),
                     ),
                   ],
                 ),
@@ -74,11 +93,11 @@ class _HubApplyPageState extends State<HubApplyPage> {
                       'Filter by Category',
                       style: GoogleFonts.poppins(
                         color: Color(0xFF111111),
-                        fontSize: 16,
+                        fontSize: isTablet ? 20 : 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: isTablet ? 16 : 12),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
@@ -88,7 +107,7 @@ class _HubApplyPageState extends State<HubApplyPage> {
                           final isSelected = selectedFilter == index + 1;
                           
                           return Padding(
-                            padding: EdgeInsets.only(right: 12),
+                            padding: EdgeInsets.only(right: isTablet ? 16 : 12),
                             child: InkWell(
                               onTap: () {
                                 setState(() {
@@ -97,18 +116,18 @@ class _HubApplyPageState extends State<HubApplyPage> {
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
+                                  horizontal: isTablet ? 20 : 16,
+                                  vertical: isTablet ? 10 : 8,
                                 ),
                                 decoration: BoxDecoration(
                                   color: isSelected ? Color(0xFF667eea) : Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(isTablet ? 25 : 20),
                                 ),
                                 child: Text(
                                   category,
                                   style: GoogleFonts.poppins(
                                     color: isSelected ? Colors.white : Color(0xFF111111),
-                                    fontSize: 14,
+                                    fontSize: isTablet ? 16 : 14,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -122,20 +141,20 @@ class _HubApplyPageState extends State<HubApplyPage> {
                 ),
               ),
               
-              SizedBox(height: 20),
+              SizedBox(height: isTablet ? 24 : 20),
               
               // Hub Listings
               Expanded(
                 child: GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.8,
+                    crossAxisCount: getCrossAxisCount(),
+                    crossAxisSpacing: isTablet ? 20 : 16,
+                    mainAxisSpacing: isTablet ? 20 : 16,
+                    childAspectRatio: getAspectRatio(),
                   ),
                   itemCount: 12,
                   itemBuilder: (context, index) {
-                    return _buildHubCard(index);
+                    return _buildHubCard(index, isTablet, isLaptop);
                   },
                 ),
               ),
@@ -143,24 +162,33 @@ class _HubApplyPageState extends State<HubApplyPage> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Add new hub functionality
-        },
-        backgroundColor: Color(0xFF667eea),
-        icon: Icon(Icons.add, color: Colors.white),
-        label: Text(
-          'Add New Hub',
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
+      floatingActionButton: isTablet 
+        ? FloatingActionButton.extended(
+            onPressed: () {
+              // Add new hub functionality
+            },
+            backgroundColor: Color(0xFF667eea),
+            icon: Icon(Icons.add, color: Colors.white),
+            label: Text(
+              'Add New Hub',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: isTablet ? 16 : 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          )
+        : FloatingActionButton(
+            onPressed: () {
+              // Add new hub functionality
+            },
+            backgroundColor: Color(0xFF667eea),
+            child: Icon(Icons.add, color: Colors.white),
           ),
-        ),
-      ),
     );
   }
 
-  Widget _buildHubCard(int index) {
+  Widget _buildHubCard(int index, bool isTablet, bool isLaptop) {
     final hubData = [
       {
         'title': 'Web Development',
@@ -253,13 +281,13 @@ class _HubApplyPageState extends State<HubApplyPage> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
         border: Border.all(color: Color(0xFFE0E0E0)),
         boxShadow: [
           BoxShadow(
-            blurRadius: 4,
+            blurRadius: isTablet ? 6 : 4,
             color: Color(0x0A000000),
-            offset: Offset(0, 2),
+            offset: Offset(0, isTablet ? 3 : 2),
           ),
         ],
       ),
@@ -268,12 +296,12 @@ class _HubApplyPageState extends State<HubApplyPage> {
         children: [
           // Hub Image
           Container(
-            height: 120,
+            height: isLaptop ? 160 : (isTablet ? 140 : 120),
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+                topLeft: Radius.circular(isTablet ? 16 : 12),
+                topRight: Radius.circular(isTablet ? 16 : 12),
               ),
               image: DecorationImage(
                 image: AssetImage(hub['image']!),
@@ -283,19 +311,22 @@ class _HubApplyPageState extends State<HubApplyPage> {
             child: Stack(
               children: [
                 Positioned(
-                  top: 8,
-                  right: 8,
+                  top: isTablet ? 10 : 8,
+                  right: isTablet ? 10 : 8,
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isTablet ? 10 : 8,
+                      vertical: isTablet ? 5 : 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Color(0xFF667eea),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(isTablet ? 14 : 12),
                     ),
                     child: Text(
                       hub['category']!,
                       style: GoogleFonts.poppins(
                         color: Colors.white,
-                        fontSize: 10,
+                        fontSize: isTablet ? 12 : 10,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -308,7 +339,7 @@ class _HubApplyPageState extends State<HubApplyPage> {
           // Hub Details
           Expanded(
             child: Padding(
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(isTablet ? 16 : 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -316,27 +347,31 @@ class _HubApplyPageState extends State<HubApplyPage> {
                     hub['title']!,
                     style: GoogleFonts.poppins(
                       color: Color(0xFF111111),
-                      fontSize: 16,
+                      fontSize: isTablet ? 18 : 16,
                       fontWeight: FontWeight.bold,
                     ),
-                    maxLines: 1,
+                    maxLines: isTablet ? 2 : 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: isTablet ? 6 : 4),
                   Row(
                     children: [
                       Icon(
                         Icons.location_on,
                         color: Color(0xFF667eea),
-                        size: 14,
+                        size: isTablet ? 16 : 14,
                       ),
-                      SizedBox(width: 4),
-                      Text(
-                        hub['location']!,
-                        style: GoogleFonts.poppins(
-                          color: Color(0xFF666666),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
+                      SizedBox(width: isTablet ? 6 : 4),
+                      Expanded(
+                        child: Text(
+                          hub['location']!,
+                          style: GoogleFonts.poppins(
+                            color: Color(0xFF666666),
+                            fontSize: isTablet ? 14 : 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -349,7 +384,7 @@ class _HubApplyPageState extends State<HubApplyPage> {
                         'Price',
                         style: GoogleFonts.poppins(
                           color: Color(0xFF666666),
-                          fontSize: 12,
+                          fontSize: isTablet ? 14 : 12,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
@@ -357,13 +392,13 @@ class _HubApplyPageState extends State<HubApplyPage> {
                         hub['price']!,
                         style: GoogleFonts.poppins(
                           color: Color(0xFF111111),
-                          fontSize: 16,
+                          fontSize: isTablet ? 18 : 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: isTablet ? 10 : 8),
                   Container(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -374,15 +409,15 @@ class _HubApplyPageState extends State<HubApplyPage> {
                         backgroundColor: Color(0xFF2C2C2C),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: EdgeInsets.symmetric(vertical: 8),
+                        padding: EdgeInsets.symmetric(vertical: isTablet ? 12 : 8),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(isTablet ? 10 : 8),
                         ),
                       ),
                       child: Text(
                         'View Details',
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
+                          fontSize: isTablet ? 14 : 12,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

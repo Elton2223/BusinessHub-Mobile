@@ -2,7 +2,7 @@
 class AppConfig {
   // API Configuration
   // static const String apiBaseUrl = 'http://10.50.93.130:3005';
-  static const String apiBaseUrl = 'http://192.168.187.231:3005';
+  static const String apiBaseUrl = 'http://10.50.93.126:3005';
   static const String apiVersion = 'v1';
   static const String apiAuthEndpoint = '/user-management';
   static const String apiUsersEndpoint = '/user-management';

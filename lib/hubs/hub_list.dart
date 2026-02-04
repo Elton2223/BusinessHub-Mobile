@@ -141,7 +141,7 @@ class _HubListPageState extends State<HubListPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Your Hubs',
+          'Active Hubs',
           style: GoogleFonts.poppins(
             color: Colors.white,
             fontSize: isTablet ? 24 : 20,
@@ -155,6 +155,75 @@ class _HubListPageState extends State<HubListPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Add a job/hub section - become part of active hubs
+              InkWell(
+                onTap: () => _showAddHubDialog(context, onSuccess: _loadHubs),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(isTablet ? 20 : 16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFF2C2C2C),
+                        Color(0xFF3d3d3d),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(isTablet ? 14 : 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.add_business,
+                          color: Colors.white,
+                          size: isTablet ? 32 : 28,
+                        ),
+                      ),
+                      SizedBox(width: isTablet ? 20 : 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Add a hub',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: isTablet ? 18 : 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Become part of active hubs',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white70,
+                                fontSize: isTablet ? 14 : 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: isTablet ? 20 : 16),
               // Filter Buttons
               Row(
                 children: [
@@ -167,13 +236,181 @@ class _HubListPageState extends State<HubListPage> {
               
               SizedBox(height: isTablet ? 32 : 24),
               
-              // Content Section
+              // Content Section - Active Hubs
               Expanded(
                 child: _buildContent(isTablet, isLandscape),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  static const List<String> _hubCategories = [
+    'Services',
+    'Technology',
+    'Education',
+    'Construction',
+    'Creative',
+    'Healthcare',
+    'Finance',
+    'Business',
+    'Marketing',
+  ];
+
+  void _showAddHubDialog(BuildContext context, {VoidCallback? onSuccess}) {
+    final formKey = GlobalKey<FormState>();
+    String title = '';
+    String category = _hubCategories.first;
+    String city = '';
+    String paymentAmountStr = '';
+    String description = '';
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Center(
+              child: Text(
+                'Add a new hub',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Hub title',
+                        hintText: 'e.g. Web Development',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onChanged: (v) => title = v,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+                    SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: category,
+                      decoration: InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      items: _hubCategories
+                          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                          .toList(),
+                      onChanged: (v) => setState(() => category = v ?? _hubCategories.first),
+                    ),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'City',
+                        hintText: 'e.g. Johannesburg',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onChanged: (v) => city = v,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Payment amount (R)',
+                        hintText: 'e.g. 2500',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (v) => paymentAmountStr = v,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Required';
+                        final n = double.tryParse(v.trim());
+                        if (n == null || n < 0) return 'Enter a valid amount';
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Description (optional)',
+                        hintText: 'Brief description of the hub',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        alignLabelWithHint: true,
+                      ),
+                      maxLines: 3,
+                      onChanged: (v) => description = v,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSubmitting ? null : () => Navigator.of(context).pop(),
+                child: Text('Cancel', style: GoogleFonts.poppins()),
+              ),
+              FilledButton(
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        if (formKey.currentState?.validate() != true) return;
+                        setState(() => isSubmitting = true);
+                        try {
+                          final amount = double.parse(paymentAmountStr.trim());
+                          final hub = JobhubModel(
+                            title: title.trim(),
+                            streetAddress: '',
+                            country: 'South Africa',
+                            postalCode: '',
+                            state: '',
+                            city: city.trim(),
+                            latitude: '0',
+                            longitude: '0',
+                            category: category,
+                            paymentType: 1,
+                            paymentAmount: amount,
+                            description: description.trim().isEmpty ? null : description.trim(),
+                            jobStatus: 1,
+                          );
+                          await JobhubService.createJobhub(hub);
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            onSuccess?.call();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Hub added successfully'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            setState(() => isSubmitting = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to add hub: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                child: isSubmitting
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text('Add hub', style: GoogleFonts.poppins()),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

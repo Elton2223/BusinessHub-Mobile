@@ -1,16 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import 'widgets/neumorphic_widgets.dart';
 import 'flutter_flow/neumorphic_theme.dart';
 import 'widgets/admin_navigation_menu.dart';
-import 'package:provider/provider.dart';
-import 'providers/auth_provider.dart';
 import 'utils/responsive_utils.dart';
-import 'utils/responsive_theme.dart';
 import 'services/jobhub_service.dart';
-import 'model/jobhub_model.dart';
+import 'providers/auth_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,21 +28,50 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: NeumorphicTheme.baseColor,
-      drawer: NeumorphicDrawer(
-        child: ListView(
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).primaryColor,
-              ),
-              child: Text(
-                'BusinessHub',
-                style: FlutterFlowTheme.of(context).title1.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+      drawer: Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          final user = authProvider.currentUser;
+          return SizedBox(
+            width: MediaQuery.of(context).size.width * .6,
+            child: NeumorphicDrawer(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView(
+                      children: [
+                  InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/profile');
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context).primaryColor,
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Colors.white,
+                            backgroundImage: _getProfileImage(user?.profilePhoto),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              'BusinessHub',
+                              style: FlutterFlowTheme.of(context).title1.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+            const SizedBox(height: 12),
             NeumorphicListTile(
               leading: Icon(Icons.dashboard),
               title: Text('Dashboard'),
@@ -53,6 +80,7 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
                 Navigator.pushNamed(context, '/home'); // Navigate to home (dashboard)
               },
             ),
+            const SizedBox(height: 12),
             NeumorphicListTile(
               leading: Icon(Icons.business),
               title: Text('Hubs'),
@@ -61,18 +89,45 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
                 Navigator.pushNamed(context, '/hub-list'); // Navigate to hubs
               },
             ),
+            const SizedBox(height: 12),
             NeumorphicListTile(
-              leading: Icon(Icons.person),
-              title: Text('Profile'),
+              leading: Icon(Icons.settings),
+              title: Text('Settings'),
               onTap: () {
                 Navigator.pop(context); // Close drawer
-                Navigator.pushNamed(context, '/profile'); // Navigate to profile
+                Navigator.pushNamed(context, '/settings');
               },
             ),
+            const SizedBox(height: 12),
             // Admin Navigation Menu (only shows for admin users)
             AdminNavigationMenu(),
           ],
         ),
+                  ),
+                  const SizedBox(height: 12),
+                  NeumorphicListTile(
+                    leading: Icon(Icons.logout, color: Colors.red),
+                    title: Text(
+                      'Log Out',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                      ),
+                    ),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await authProvider.logout();
+                      if (context.mounted) {
+                        Navigator.of(context).pushReplacementNamed('/login');
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 36),
+                ],
+              ),
+            ),
+          );
+        },
       ),
       body: SafeArea(
          child: Column(
@@ -489,7 +544,7 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
                      _buildBottomNavItem(
                        icon: Icons.menu_open_outlined,
                        label: 'Hubs',
-                       onTap: () => Navigator.pushNamed(context, '/hubs'),
+                       onTap: () => Navigator.pushNamed(context, '/hub-list'),
                      ),
                    ],
                  ),
@@ -1021,5 +1076,31 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
         ),
       ),
     );
+  }
+
+  ImageProvider _getProfileImage(String? profilePhoto) {
+    if (profilePhoto == null || profilePhoto.isEmpty) {
+      return const AssetImage('images/logo.png');
+    }
+    try {
+      if (profilePhoto.startsWith('data:image/')) {
+        final parts = profilePhoto.split(',');
+        if (parts.length != 2) return const AssetImage('images/logo.png');
+        String base64Data = parts[1].trim().replaceAll(RegExp(r'\s+'), '');
+        while (base64Data.length % 4 != 0) base64Data += '=';
+        if (!RegExp(r'^[A-Za-z0-9+/]*={0,2}$').hasMatch(base64Data)) {
+          return const AssetImage('images/logo.png');
+        }
+        try {
+          final bytes = base64Decode(base64Data);
+          return bytes.isEmpty ? const AssetImage('images/logo.png') : MemoryImage(bytes);
+        } catch (_) {
+          return const AssetImage('images/logo.png');
+        }
+      }
+      return NetworkImage(profilePhoto);
+    } catch (_) {
+      return const AssetImage('images/logo.png');
+    }
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../model/jobhub_model.dart';
 import '../utils/responsive_utils.dart';
-import '../utils/responsive_theme.dart';
 
 class JobhubCard extends StatelessWidget {
   final JobhubModel jobhub;

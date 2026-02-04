@@ -8,6 +8,7 @@ import 'home_page.dart';
 import 'hubs/hub_list.dart';
 import 'hubs/hub_apply.dart';
 import 'screens/admin_dashboard_screen.dart';
+import 'screens/settings_screen.dart';
 import 'config/env_config.dart';
 import 'config/api_config.dart';
 import 'providers/auth_provider.dart';
@@ -62,6 +63,7 @@ class MyApp extends StatelessWidget {
           '/hub-list': (context) => const HubListPage(),
           '/hub-apply': (context) => const HubApplyPage(),
           '/admin-dashboard': (context) => const AdminDashboardScreen(),
+          '/settings': (context) => const SettingsScreen(),
           '/neumorphic-examples': (context) => const NeumorphicExamples(),
         },
       ),

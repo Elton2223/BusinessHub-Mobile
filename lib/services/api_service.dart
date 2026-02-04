@@ -4,11 +4,60 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 
+/// Exception thrown when an API request fails.
+class ApiException implements Exception {
+  ApiException({required this.statusCode, required this.message});
+  final int statusCode;
+  final String message;
+  @override
+  String toString() => 'ApiException($statusCode: $message)';
+}
+
 class ApiService {
   // Shared preferences keys
   static const String tokenKey = 'auth_token';
   static const String userIdKey = 'user_id';
   static const String userEmailKey = 'user_email';
+
+  /// Low-level GET request. Throws [ApiException] on non-2xx.
+  static Future<http.Response> get(String path, {String? token}) async {
+    final uri = path.startsWith('http') ? Uri.parse(path) : Uri.parse('${ApiConfig.baseUrl}$path');
+    final headers = Map<String, String>.from(ApiConfig.defaultHeaders);
+    if (token != null && token.isNotEmpty) headers['Authorization'] = 'Bearer $token';
+    final response = await http.get(uri, headers: headers).timeout(
+      Duration(milliseconds: ApiConfig.connectionTimeout),
+      onTimeout: () => throw ApiException(statusCode: 408, message: 'Connection timeout'),
+    );
+    return response;
+  }
+
+  /// Low-level POST request. Throws [ApiException] on non-2xx.
+  static Future<http.Response> post(String path, Map<String, dynamic> body, {String? token}) async {
+    final uri = path.startsWith('http') ? Uri.parse(path) : Uri.parse('${ApiConfig.baseUrl}$path');
+    final headers = Map<String, String>.from(ApiConfig.defaultHeaders);
+    if (token != null && token.isNotEmpty) headers['Authorization'] = 'Bearer $token';
+    final response = await http.post(uri, headers: headers, body: jsonEncode(body)).timeout(
+      Duration(milliseconds: ApiConfig.connectionTimeout),
+      onTimeout: () => throw ApiException(statusCode: 408, message: 'Connection timeout'),
+    );
+    return response;
+  }
+
+  /// Parses response body; throws [ApiException] if status is not 2xx.
+  static dynamic handleResponse(http.Response response) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.body.isEmpty) return null;
+      return jsonDecode(response.body);
+    }
+    String message = 'Request failed';
+    try {
+      final data = jsonDecode(response.body);
+      message = data['error']?['message'] ?? data['message'] ?? response.body;
+    } catch (_) {
+      message = response.body.isNotEmpty ? response.body : 'Status ${response.statusCode}';
+    }
+    throw ApiException(statusCode: response.statusCode, message: message);
+  }
 
   // Register a new user
   static Future<Map<String, dynamic>> registerUser({

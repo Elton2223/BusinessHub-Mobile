@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import '../providers/jobhub_provider.dart';
 import '../model/user_model.dart';
 import '../model/jobhub_model.dart';
 import '../services/jobhub_service.dart';
 import '../widgets/admin_access_wrapper.dart';
 import '../utils/responsive_utils.dart';
-import '../utils/responsive_theme.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);

@@ -6,12 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../providers/auth_provider.dart';
-import '../model/user_model.dart';
 import '../flutter_flow/flutter_flow_theme.dart';
-import '../widgets/neumorphic_widgets.dart';
-import '../flutter_flow/neumorphic_theme.dart';
 import '../utils/responsive_utils.dart';
-import '../utils/responsive_theme.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({Key? key}) : super(key: key);
