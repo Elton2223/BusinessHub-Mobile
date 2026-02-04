@@ -183,7 +183,7 @@ class _LoginWidgetState extends State<LoginWidget> with ResponsiveWidgetMixin {
                                   border: Border.all(color: Colors.red.withOpacity(0.3)),
                                 ),
                                 child: Text(
-                                  authProvider.errorMessage!,
+                                  'Wrong Credentials',
                                   style: const TextStyle(color: Colors.red),
                                   textAlign: TextAlign.center,
                                 ),
@@ -254,7 +254,7 @@ class _LoginWidgetState extends State<LoginWidget> with ResponsiveWidgetMixin {
                                       // Show error message
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text('Login failed: ${authProvider.errorMessage}'),
+                                          content: Text('Wrong Credentials'),
                                           backgroundColor: Colors.red,
                                           duration: Duration(seconds: 3),
                                         ),
@@ -294,6 +294,25 @@ class _LoginWidgetState extends State<LoginWidget> with ResponsiveWidgetMixin {
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(context, '/forgot-password');
+                              },
+                              child: Padding(
+                                padding: EdgeInsetsDirectional.fromSTEB(0, responsive.isTablet ? 12 : 10, 0, 0),
+                                child: Center(
+                                  child: Text(
+                                    'Forgot Password?',
+                                    style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                                      color: FlutterFlowTheme.of(context).primaryColor,
+                                      fontSize: responsive.isTablet ? 15 : 14,
+                                      fontWeight: FontWeight.w500,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                             Padding(
@@ -394,7 +413,7 @@ class _LoginWidgetState extends State<LoginWidget> with ResponsiveWidgetMixin {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Welcome Back',
+                  'Welcome',
                   style: FlutterFlowTheme.of(context).title1.copyWith(
                     color: FlutterFlowTheme.of(context).primaryText,
                     fontSize: responsive.isTablet ? 36 : 28,
@@ -448,7 +467,7 @@ class _LoginWidgetState extends State<LoginWidget> with ResponsiveWidgetMixin {
                               border: Border.all(color: Colors.red.withOpacity(0.3)),
                             ),
                             child: Text(
-                              authProvider.errorMessage!,
+                              'Wrong Credentials',
                               style: const TextStyle(color: Colors.red),
                               textAlign: TextAlign.center,
                             ),
@@ -503,7 +522,7 @@ class _LoginWidgetState extends State<LoginWidget> with ResponsiveWidgetMixin {
                                   // Show error message
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Login failed: ${authProvider.errorMessage}'),
+                                      content: Text('Wrong Credentials'),
                                       backgroundColor: Colors.red,
                                       duration: Duration(seconds: 3),
                                     ),
@@ -538,6 +557,25 @@ class _LoginWidgetState extends State<LoginWidget> with ResponsiveWidgetMixin {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/forgot-password');
+                          },
+                          child: Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(0, responsive.isTablet ? 12 : 10, 0, 0),
+                            child: Center(
+                              child: Text(
+                                'Forgot Password?',
+                                style: FlutterFlowTheme.of(context).bodyText1.copyWith(
+                                  color: FlutterFlowTheme.of(context).primaryColor,
+                                  fontSize: responsive.isTablet ? 15 : 14,
+                                  fontWeight: FontWeight.w500,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                         SizedBox(height: responsive.isTablet ? 24 : 16),

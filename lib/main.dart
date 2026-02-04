@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'userManagement/register.dart';
 import 'userManagement/verify_email.dart';
 import 'userManagement/login.dart';
+import 'userManagement/forgot_password.dart';
+import 'userManagement/verify_otp_screen.dart';
+import 'userManagement/reset_password_screen.dart';
 import 'userManagement/profile_screen.dart';
 import 'home_page.dart';
 import 'hubs/hub_list.dart';
@@ -57,6 +60,9 @@ class MyApp extends StatelessWidget {
         routes: {
           '/verify_email': (context) => const VerifyEmailScreen(),
           '/login': (context) => const LoginWidget(),
+          '/forgot-password': (context) => const ForgotPasswordScreen(),
+          '/verify-otp': (context) => const VerifyOtpScreen(),
+          '/reset-password': (context) => const ResetPasswordScreen(),
           '/register': (context) => const RegisterWidget(),
           '/profile': (context) => const ProfileScreen(),
           '/home': (context) => const HomePage(),
