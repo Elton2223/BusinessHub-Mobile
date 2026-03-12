@@ -106,14 +106,15 @@ class JobhubModel {
   // Helper methods
   String get fullAddress => '$streetAddress, $city, $state, $country';
   
+  /// Label for payment: amount is always the total for the whole work, not per hour.
   String get paymentTypeText {
     switch (paymentType) {
       case 1:
-        return 'Hourly';
+        return 'Total for job';
       case 2:
-        return 'Fixed';
+        return 'Fixed (total)';
       case 3:
-        return 'Project-based';
+        return 'Project (total)';
       default:
         return 'Unknown';
     }

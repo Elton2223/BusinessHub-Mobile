@@ -2,13 +2,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import 'widgets/neumorphic_widgets.dart';
-import 'flutter_flow/neumorphic_theme.dart';
 import 'widgets/admin_navigation_menu.dart';
 import 'utils/responsive_utils.dart';
-import 'services/jobhub_service.dart';
+import 'services/hub_repository.dart';
+import 'services/notification_service.dart';
+import 'services/work_session_service.dart';
+import 'services/location_tracking_service.dart';
 import 'providers/auth_provider.dart';
+import 'hubs/hub_detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,23 +23,144 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  int _unreadNotificationCount = 0;
+  int _activeWorkCount = 0;
+  static bool _locationPromptShownThisSession = false;
+  Future<List<dynamic>>? _nearbyHubsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshCounts();
+      _maybePromptLocation();
+      _nearbyHubsFuture ??= _loadAvailableJobhubs();
+      if (mounted) setState(() {});
+    });
+  }
+
+  Future<void> _maybePromptLocation() async {
+    if (!mounted || _locationPromptShownThisSession) return;
+    final user = context.read<AuthProvider>().currentUser;
+    if (user == null) return;
+    final hasLocation = user.latitude != null && user.longitude != null;
+    if (hasLocation) return;
+    _locationPromptShownThisSession = true;
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Use your location?'),
+        content: const Text(
+          'Allow BusinessHub to use your location to find nearby hubs and set your location when posting jobs. You can change this later in settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              final position = await LocationTrackingService.getCurrentPosition();
+              if (position != null && mounted) {
+                await context.read<AuthProvider>().updateUserLocation(
+                  position.latitude,
+                  position.longitude,
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Location updated. You can find nearby hubs and post with your location.'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } else if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Could not get location. You can enable it in device settings.'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            },
+            child: const Text('Allow'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _refreshCounts() async {
+    if (!mounted) return;
+    final userId = context.read<AuthProvider>().currentUser?.id;
+    if (userId == null) return;
+    try {
+      final results = await Future.wait([
+        NotificationService.getUnreadCount(userId),
+        WorkSessionService.getActiveSessionsForWorker(userId),
+      ]);
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = results[0] as int;
+          _activeWorkCount = (results[1] as List).length;
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: NeumorphicTheme.baseColor,
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF2C2C2C),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () => scaffoldKey.currentState!.openDrawer(),
+        ),
+        title: Text(
+          'Dashboard',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: isTablet ? 22 : 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          Badge(
+            isLabelVisible: _unreadNotificationCount > 0,
+            label: Text(
+              _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+              style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 26),
+              onPressed: () async {
+                await Navigator.pushNamed(context, '/notifications');
+                if (mounted) _refreshCounts();
+              },
+            ),
+          ),
+        ],
+      ),
       drawer: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           final user = authProvider.currentUser;
-          return SizedBox(
-            width: MediaQuery.of(context).size.width * .6,
-            child: NeumorphicDrawer(
+          final userName = user != null ? '${user.name ?? ''} ${user.surname ?? ''}'.trim() : 'Guest';
+          final userEmail = user?.email ?? '';
+          return Drawer(
+            width: MediaQuery.of(context).size.width * 0.68,
+            backgroundColor: const Color(0xFFFAFAFA),
+            child: SafeArea(
               child: Column(
                 children: [
-                  Expanded(
-                    child: ListView(
-                      children: [
+                  // Header: profile + app name
                   InkWell(
                     onTap: () {
                       Navigator.pop(context);
@@ -46,83 +168,158 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
                     },
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                      decoration: BoxDecoration(
-                        color: FlutterFlowTheme.of(context).primaryColor,
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF2C2C2C),
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           CircleAvatar(
-                            radius: 28,
+                            radius: 36,
                             backgroundColor: Colors.white,
                             backgroundImage: _getProfileImage(user?.profilePhoto),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              'BusinessHub',
-                              style: FlutterFlowTheme.of(context).title1.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                          const SizedBox(height: 14),
+                          Text(
+                            userName.isEmpty ? 'BusinessHub' : userName,
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (userEmail.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              userEmail,
+                              style: GoogleFonts.poppins(
+                                color: Colors.white70,
+                                fontSize: 12,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                          const SizedBox(height: 6),
+                          Text(
+                            'View profile',
+                            style: GoogleFonts.poppins(
+                              color: Color(0xFF06C698),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-            const SizedBox(height: 12),
-            NeumorphicListTile(
-              leading: Icon(Icons.dashboard),
-              title: Text('Dashboard'),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                Navigator.pushNamed(context, '/home'); // Navigate to home (dashboard)
-              },
-            ),
-            const SizedBox(height: 12),
-            NeumorphicListTile(
-              leading: Icon(Icons.business),
-              title: Text('Hubs'),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                Navigator.pushNamed(context, '/hub-list'); // Navigate to hubs
-              },
-            ),
-            const SizedBox(height: 12),
-            NeumorphicListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Settings'),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                Navigator.pushNamed(context, '/settings');
-              },
-            ),
-            const SizedBox(height: 12),
-            // Admin Navigation Menu (only shows for admin users)
-            AdminNavigationMenu(),
-          ],
-        ),
-                  ),
-                  const SizedBox(height: 12),
-                  NeumorphicListTile(
-                    leading: Icon(Icons.logout, color: Colors.red),
-                    title: Text(
-                      'Log Out',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.red,
-                      ),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      children: [
+                        _drawerSectionLabel('Browse'),
+                        _drawerTile(
+                          icon: Icons.dashboard_rounded,
+                          label: 'Dashboard',
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/home');
+                          },
+                        ),
+                        _drawerTile(
+                          icon: Icons.explore_rounded,
+                          label: 'Hubs',
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/hub-list');
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        _drawerSectionLabel('My activity'),
+                        _drawerTile(
+                          icon: Icons.business_center_rounded,
+                          label: 'My Hubs',
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/my-hubs');
+                          },
+                        ),
+                        _drawerTile(
+                          icon: Icons.send_rounded,
+                          label: 'My Applications',
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/my-applications');
+                          },
+                        ),
+                        _drawerTile(
+                          icon: Icons.check_circle_outline_rounded,
+                          label: 'Accepted hubs',
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/accepted-hubs');
+                          },
+                        ),
+                        _drawerTile(
+                          icon: Icons.work_outline_rounded,
+                          label: 'Active work',
+                          badge: _activeWorkCount > 0 ? '$_activeWorkCount' : null,
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/active-work-list').then((_) => _refreshCounts());
+                          },
+                        ),
+                        _drawerTile(
+                          icon: Icons.history_rounded,
+                          label: 'Job history',
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/job-history');
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        _drawerSectionLabel('Wallet'),
+                        _drawerTile(
+                          icon: Icons.account_balance_wallet_rounded,
+                          label: 'App Pocket',
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/app-pocket');
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        _drawerSectionLabel('App'),
+                        _drawerTile(
+                          icon: Icons.settings_rounded,
+                          label: 'Settings',
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/settings');
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        AdminNavigationMenu(),
+                        const Divider(height: 24),
+                        _drawerTile(
+                          icon: Icons.logout_rounded,
+                          label: 'Log out',
+                          iconColor: Colors.red,
+                          labelColor: Colors.red,
+                          onTap: () async {
+                            Navigator.pop(context);
+                            await authProvider.logout();
+                            if (context.mounted) {
+                              Navigator.of(context).pushReplacementNamed('/login');
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                      ],
                     ),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await authProvider.logout();
-                      if (context.mounted) {
-                        Navigator.of(context).pushReplacementNamed('/login');
-                      }
-                    },
                   ),
-                  const SizedBox(height: 36),
                 ],
               ),
             ),
@@ -130,794 +327,701 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
         },
       ),
       body: SafeArea(
-         child: Column(
-           children: [
-                           // Mobile App Bar
-              if (responsive.isPhone)
-                Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: FlutterFlowTheme.of(context).primaryBackground,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF989898),
-                        offset: const Offset(4, 4),
-                        blurRadius: 8,
-                      ),
-                      BoxShadow(
-                        color: const Color(0xFFFFFFFF),
-                        offset: const Offset(-4, -4),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).primaryBackground,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF989898),
-                              offset: const Offset(2, 2),
-                              blurRadius: 4,
-                            ),
-                            BoxShadow(
-                              color: const Color(0xFFFFFFFF),
-                              offset: const Offset(-2, -2),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
-                        child: IconButton(
-                          icon: Icon(Icons.menu),
-                          onPressed: () => scaffoldKey.currentState!.openDrawer(),
-                        ),
-                      ),
-                      Text(
-                        'BusinessHub',
-                        style: FlutterFlowTheme.of(context).title1.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).primaryBackground,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF989898),
-                              offset: const Offset(2, 2),
-                              blurRadius: 4,
-                            ),
-                            BoxShadow(
-                              color: const Color(0xFFFFFFFF),
-                              offset: const Offset(-2, -2),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
-                        child: IconButton(
-                          icon: Icon(Icons.notifications),
-                          onPressed: () {},
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-             // Main Content
-             Expanded(
-               child: Padding(
-                 padding: EdgeInsets.all(16),
-                 child: SingleChildScrollView(
-                   child: Column(
-                     crossAxisAlignment: CrossAxisAlignment.start,
-                     children: [
-                     // Desktop App Bar
-                     if (MediaQuery.of(context).size.width >= 768)
-                       Padding(
-                         padding: EdgeInsets.only(bottom: 25),
-                         child: Container(
-                           padding: EdgeInsets.all(16),
-                           decoration: BoxDecoration(
-                             color: FlutterFlowTheme.of(context).primaryBackground,
-                             borderRadius: BorderRadius.circular(8),
-                             boxShadow: [
-                               BoxShadow(
-                                 blurRadius: 3,
-                                 color: Color(0x33000000),
-                                 offset: Offset(0, 1),
-                               ),
-                             ],
-                           ),
-                           child: Row(
-                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                             children: [
-                               Text(
-                                 'Dashboard Activity',
-                                 style: FlutterFlowTheme.of(context).title1.copyWith(
-                                   fontWeight: FontWeight.bold,
-                                 ),
-                               ),
-                               Row(
-                                 children: [
-                                   IconButton(
-                                     icon: Icon(Icons.notifications),
-                                     onPressed: () {},
-                                   ),
-                                   IconButton(
-                                     icon: Icon(Icons.person),
-                                     onPressed: () {},
-                                   ),
-                                 ],
-                               ),
-                             ],
-                           ),
-                         ),
-                       ),
-                     // Welcome Banner
-                     Container(
-                       width: double.infinity,
-                       height: 200,
-                                               decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
-                          image: DecorationImage(
-                            fit: BoxFit.cover,
-                            image: AssetImage('images/splash.jpeg'),
-                          ),
-                        ),
-                       child: Container(
-                         decoration: BoxDecoration(
-                           borderRadius: BorderRadius.circular(25),
-                           gradient: LinearGradient(
-                             begin: Alignment.topLeft,
-                             end: Alignment.bottomRight,
-                             colors: [
-                               Colors.black.withOpacity(0.3),
-                               Colors.transparent,
-                             ],
-                           ),
-                         ),
-                         child: Padding(
-                           padding: EdgeInsets.all(20),
-                           child: Column(
-                             crossAxisAlignment: CrossAxisAlignment.start,
-                             mainAxisAlignment: MainAxisAlignment.center,
-                             children: [
-                               Text(
-                                 'Welcome Khethani',
-                                 style: GoogleFonts.readexPro(
-                                   color: Colors.white,
-                                   fontSize: 28,
-                                   fontWeight: FontWeight.bold,
-                                 ),
-                               ),
-                               SizedBox(height: 8),
-                               Text(
-                                 'Enjoy using BusinessHub to find\nany nearby jobs at your area',
-                                 style: GoogleFonts.readexPro(
-                                   color: Colors.white.withOpacity(0.9),
-                                   fontSize: 14,
-                                   fontWeight: FontWeight.w300,
-                                 ),
-                               ),
-                               SizedBox(height: 16),
-                                                               InkWell(
-                                  onTap: () => Navigator.pushNamed(context, '/hub-list'),
-                                 child: Container(
-                                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                   decoration: BoxDecoration(
-                                     color: Color(0xFF111111),
-                                     borderRadius: BorderRadius.circular(30),
-                                     border: Border.all(color: Color(0x66E6E6E6)),
-                                   ),
-                                   child: Text(
-                                     'View Hub',
-                                     style: GoogleFonts.readexPro(
-                                       color: Colors.white,
-                                       fontSize: 12,
-                                       fontWeight: FontWeight.w500,
-                                     ),
-                                   ),
-                                 ),
-                               ),
-                             ],
-                           ),
-                         ),
-                       ),
-                     ),
-                     SizedBox(height: 25),
-                     // Active Hubs Section
-                     
-                     SizedBox(height: 25),
-                     // Available Jobhubs Section
-                     Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                       children: [
-                         Text(
-                           'Active Hubs',
-                           style: GoogleFonts.poppins(
-                             color: Color(0xFF111111),
-                             fontSize: 18,
-                             fontWeight: FontWeight.bold,
-                           ),
-                         ),
-                         InkWell(
-                           onTap: () => Navigator.pushNamed(context, '/hub-list'),
-                           child: Text(
-                             'See more',
-                             style: GoogleFonts.poppins(
-                               color: Color(0xFF667eea),
-                               fontSize: 16,
-                               fontWeight: FontWeight.w600,
-                             ),
-                           ),
-                         ),
-                       ],
-                     ),
-                     SizedBox(height: 15),
-                     // Available Jobhubs Cards
-                     FutureBuilder<List<dynamic>>(
-                       future: _loadAvailableJobhubs(),
-                       builder: (context, snapshot) {
-                         if (snapshot.connectionState == ConnectionState.waiting) {
-                           return const Center(
-                             child: Padding(
-                               padding: EdgeInsets.all(20),
-                               child: CircularProgressIndicator(),
-                             ),
-                           );
-                         }
-                         
-                         if (snapshot.hasError) {
-                           return Center(
-                             child: Padding(
-                               padding: const EdgeInsets.all(20),
-                               child: Text(
-                                 'Error loading available jobhubs',
-                                 style: TextStyle(color: Colors.red),
-                               ),
-                             ),
-                           );
-                         }
-                         
-                         final availableJobhubs = snapshot.data ?? [];
-                         
-                         if (availableJobhubs.isEmpty) {
-                           return Center(
-                             child: Padding(
-                               padding: const EdgeInsets.all(20),
-                               child: Text(
-                                 'No available jobhubs',
-                                 style: TextStyle(color: Colors.grey),
-                               ),
-                             ),
-                           );
-                         }
-                         
-                         return SingleChildScrollView(
-                           scrollDirection: Axis.horizontal,
-                           child: Row(
-                             children: availableJobhubs.take(3).map((jobhub) => 
-                               _buildAvailableJobhubCard(jobhub)
-                             ).toList(),
-                           ),
-                         );
-                       },
-                     ),
-                     SizedBox(height: 25),
-                     Divider(),
-                     SizedBox(height: 15),
-                     Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                       children: [
-                         Text(
-                           'What\'s In The Hub',
-                           style: GoogleFonts.poppins(
-                             color: Color(0xFF111111),
-                             fontSize: 18,
-                             fontWeight: FontWeight.bold,
-                           ),
-                         ),
-                         InkWell(
-                           onTap: () => Navigator.pushNamed(context, '/hub-apply'),
-                           child: Text(
-                             'See more',
-                             style: GoogleFonts.poppins(
-                               color: Color(0xFF667eea),
-                               fontSize: 16,
-                               fontWeight: FontWeight.w600,
-                             ),
-                           ),
-                         ),
-                       ],
-                     ),
-                     SizedBox(height: 15),
-                     // Hub Information Cards - New Design
-                     Row(
-                       children: [
-                         Expanded(
-                           child: _buildHubInfoCard(
-                             'Review Requests',
-                             'Review Requests You Made To Other Hubs',
-                             'View',
-                             Color(0xFFFF9800), // Orange border
-                             true, // Left border
-                           ),
-                         ),
-                         SizedBox(width: 15),
-                         Expanded(
-                           child: _buildHubInfoCard(
-                             'Review Requests',
-                             'Review Requests You Made To Other Hubs',
-                             'View',
-                             Color(0xFF87CEEB), // Light blue border
-                             false, // Right border
-                           ),
-                         ),
-                       ],
-                     ),
-                     SizedBox(height: 25),
-                     // Quick Stats
-                     Container(
-                       padding: EdgeInsets.all(16),
-                                               decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).primaryBackground,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Color(0xFFE0E0E0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF989898),
-                              offset: const Offset(6, 6),
-                              blurRadius: 12,
-                            ),
-                            BoxShadow(
-                              color: const Color(0xFFFFFFFF),
-                              offset: const Offset(-6, -6),
-                              blurRadius: 12,
-                            ),
-                          ],
-                        ),
-                       child: Column(
-                         crossAxisAlignment: CrossAxisAlignment.start,
-                         children: [
-                           Text(
-                             'Quick Stats',
-                             style: GoogleFonts.poppins(
-                               color: Color(0xFF111111),
-                               fontSize: 16,
-                               fontWeight: FontWeight.bold,
-                             ),
-                           ),
-                           SizedBox(height: 12),
-                           Row(
-                             children: [
-                               Expanded(
-                                 child: _buildStatItem('Today\'s Jobs', '12', Icons.today),
-                               ),
-                               Expanded(
-                                 child: _buildStatItem('This Week', '89', Icons.calendar_view_week),
-                               ),
-                               Expanded(
-                                 child: _buildStatItem('This Month', '342', Icons.calendar_month),
-                               ),
-                             ],
-                           ),
-                         ],
-                       ),
-                     ),
-                     SizedBox(height: 80), // Add bottom padding for bottom navigation
-                   ],
-                 ),
-               ),
-             ),
-             ),
-             // Fixed Bottom Navigation Bar
-             Container(
-               decoration: BoxDecoration(
-                 color: FlutterFlowTheme.of(context).primaryBackground,
-                 boxShadow: [
-                   BoxShadow(
-                     blurRadius: 8,
-                     color: Color(0x1A000000),
-                     offset: Offset(0, -2),
-                   ),
-                 ],
-               ),
-               child: Padding(
-                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                 child: Row(
-                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                   children: [
-                     _buildBottomNavItem(
-                       icon: Icons.person_2,
-                       label: 'Profile',
-                       onTap: () => Navigator.pushNamed(context, '/profile'),
-                     ),
-                     _buildBottomNavItem(
-                       icon: Icons.notifications_active,
-                       label: 'Notifications',
-                       onTap: () => Navigator.pushNamed(context, '/notifications'),
-                     ),
-                     _buildBottomNavItem(
-                       icon: Icons.menu_open_outlined,
-                       label: 'Hubs',
-                       onTap: () => Navigator.pushNamed(context, '/hub-list'),
-                     ),
-                   ],
-                 ),
-               ),
-             ),
-           ],
-         ),
-       ),
-    );
-  }
-
-    Widget _buildHubCard(String title, String distance, String price, IconData icon) {
-    return Container(
-      width: 170,
-      height: 99,
-      decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).primaryBackground,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF989898),
-            offset: const Offset(6, 6),
-            blurRadius: 12,
-          ),
-          BoxShadow(
-            color: const Color(0xFFFFFFFF),
-            offset: const Offset(-6, -6),
-            blurRadius: 12,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 2,
-                    style: GoogleFonts.poppins(
-                      color: Color(0xFF828080),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Row(
-                    children: [
-                      Text(
-                        distance,
-                        style: GoogleFonts.poppins(
-                          color: Color(0xFF111111),
-                          fontSize: 8,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF06C698),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.notifications_active_rounded,
-                          color: Colors.white,
-                          size: 10,
-                        ),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        price,
-                        style: GoogleFonts.readexPro(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+        child: RefreshIndicator(
+          onRefresh: _refreshCounts,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.symmetric(
+              horizontal: isTablet ? 28 : 20,
+              vertical: isTablet ? 20 : 16,
             ),
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: Color(0xFF111111),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 15,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHubInfoCard(String title, String subtitle, String buttonText, Color borderColor, bool isLeftBorder) {
-    return InkWell(
-      onTap: () {
-        // Navigate to review requests page
-        Navigator.pushNamed(context, '/review-requests');
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Color(0xFFE0E0E0)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF989898),
-              offset: const Offset(8, 8),
-              blurRadius: 16,
-            ),
-            BoxShadow(
-              color: const Color(0xFFFFFFFF),
-              offset: const Offset(-8, -8),
-              blurRadius: 16,
-            ),
-          ],
-        ),
-        child: Stack(
-        children: [
-          // Colored border overlay
-          Positioned(
-            left: isLeftBorder ? 0 : null,
-            right: isLeftBorder ? null : 0,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: 4,
-              decoration: BoxDecoration(
-                color: borderColor,
-                borderRadius: BorderRadius.only(
-                  topLeft: isLeftBorder ? Radius.circular(12) : Radius.zero,
-                  bottomLeft: isLeftBorder ? Radius.circular(12) : Radius.zero,
-                  topRight: isLeftBorder ? Radius.zero : Radius.circular(12),
-                  bottomRight: isLeftBorder ? Radius.zero : Radius.circular(12),
-                ),
-              ),
-            ),
-                    ),
-          // Main content
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top image section
-              Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                  image: DecorationImage(
-                    image: AssetImage('images/splash.jpeg'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              // Content section
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Welcome
+                _buildWelcomeBanner(context, isTablet),
+                SizedBox(height: isTablet ? 28 : 20),
+                // Action strip: Active work, App Pocket, Job history (notifications live in app bar only)
+                _buildActionStrip(context, isTablet),
+                SizedBox(height: isTablet ? 28 : 24),
+                // Quick access grid (2x2)
+                _buildSectionTitle('Quick access'),
+                SizedBox(height: isTablet ? 16 : 12),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: isTablet ? 1.35 : 1.25,
                   children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.poppins(
-                        color: Color(0xFF111111),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    _buildGridTile(
+                      context: context,
+                      title: 'Explore hubs',
+                      icon: Icons.explore_outlined,
+                      color: const Color(0xFF06C698),
+                      onTap: () => Navigator.pushNamed(context, '/hub-list'),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.poppins(
-                        color: Color(0xFF666666),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                      ),
+                    _buildGridTile(
+                      context: context,
+                      title: 'My Applications',
+                      icon: Icons.send_outlined,
+                      color: const Color(0xFFFF9800),
+                      onTap: () => Navigator.pushNamed(context, '/my-applications'),
                     ),
-                    SizedBox(height: 16),
-                    // View button
-                    InkWell(
-                      onTap: () {
-                        // Navigate to review requests page
-                        Navigator.pushNamed(context, '/review-requests');
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Color(0xFFE0E0E0)),
-                        ),
-                        child: Text(
-                          buttonText,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
-                            color: Color(0xFF111111),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                    _buildGridTile(
+                      context: context,
+                      title: 'My Hubs',
+                      icon: Icons.business_center_outlined,
+                      color: const Color(0xFF2196F3),
+                      onTap: () => Navigator.pushNamed(context, '/my-hubs'),
+                    ),
+                    _buildGridTile(
+                      context: context,
+                      title: 'Accepted hubs',
+                      icon: Icons.check_circle_outline,
+                      color: const Color(0xFF6C63FF),
+                      onTap: () => Navigator.pushNamed(context, '/accepted-hubs'),
+                    ),
+                  ],
+                ),
+                SizedBox(height: isTablet ? 28 : 24),
+                // Nearby hubs
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildSectionTitle('Nearby hubs'),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/hub-list'),
+                      child: Text(
+                        'See all',
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF06C698),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                SizedBox(height: isTablet ? 16 : 12),
+                FutureBuilder<List<dynamic>>(
+                  future: _nearbyHubsFuture ?? Future.value(<dynamic>[]),
+                  builder: (context, snapshot) {
+                    if (_nearbyHubsFuture == null || snapshot.connectionState == ConnectionState.waiting) {
+                      return _buildHubListSkeleton(isTablet);
+                    }
+                    if (snapshot.hasError) {
+                      return _buildEmptyHubCard('Unable to load hubs');
+                    }
+                    final list = snapshot.data ?? [];
+                    if (list.isEmpty) {
+                      return _buildEmptyHubCard('No available hubs');
+                    }
+                    return SizedBox(
+                      height: isTablet ? 172 : 164,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: list.length > 5 ? 5 : list.length,
+                        separatorBuilder: (_, __) => SizedBox(width: isTablet ? 16 : 12),
+                        itemBuilder: (context, index) => _buildHubCard(list[index], isTablet),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 88),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              offset: const Offset(0, -2),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildBottomNavItem(Icons.person_2_outlined, 'Profile', () => Navigator.pushNamed(context, '/profile'), false),
+                _buildBottomNavItem(Icons.home_outlined, 'Home', () {}, true), // current screen
+                _buildBottomNavItem(Icons.explore_outlined, 'Hubs', () => Navigator.pushNamed(context, '/hub-list'), false),
+                _buildBottomNavItem(Icons.menu_rounded, 'Menu', () => scaffoldKey.currentState!.openDrawer(), false),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildInfoCard(String title, String value, IconData icon, Color color) {
+  Widget _drawerSectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 12, 8, 6),
+      child: Text(
+        label.toUpperCase(),
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey.shade600,
+          letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+
+  Widget _drawerTile({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    String? badge,
+    Color? iconColor,
+    Color? labelColor,
+  }) {
+    final color = iconColor ?? const Color(0xFF2C2C2C);
+    final textColor = labelColor ?? const Color(0xFF1a1a1a);
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, size: 22, color: color),
+      ),
+      title: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          color: textColor,
+        ),
+      ),
+      trailing: badge != null
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF06C698),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                badge,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
+      onTap: onTap,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
+  }
+
+  Widget _buildWelcomeBanner(BuildContext context, bool isTablet) {
+    final name = context.watch<AuthProvider>().currentUser?.name ?? 'there';
+    final welcomeName = name.isNotEmpty ? name : 'there';
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(16),
+      height: isTablet ? 200 : 180,
       decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).primaryBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            blurRadius: 2,
-            color: Color(0x0A000000),
-            offset: Offset(0, 1),
+            color: Colors.black.withOpacity(0.08),
+            offset: const Offset(0, 4),
+            blurRadius: 12,
           ),
         ],
+        image: const DecorationImage(
+          fit: BoxFit.cover,
+          image: AssetImage('images/splash.jpeg'),
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 24,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.black.withOpacity(0.5),
+                Colors.black.withOpacity(0.2),
+              ],
             ),
           ),
-          SizedBox(width: 16),
-          Expanded(
+          child: Padding(
+            padding: EdgeInsets.all(isTablet ? 24 : 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  title,
+                  'Welcome, $welcomeName',
                   style: GoogleFonts.poppins(
-                    color: Color(0xFF666666),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    fontSize: isTablet ? 26 : 22,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
-                  value,
+                  'Find nearby jobs and manage work in one place.',
                   style: GoogleFonts.poppins(
-                    color: Color(0xFF111111),
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    color: Colors.white.withOpacity(0.92),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  child: InkWell(
+                    onTap: () => Navigator.pushNamed(context, '/hub-list'),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      child: Text(
+                        'Explore hubs',
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF2C2C2C),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildStatItem(String title, String value, IconData icon) {
-    return Column(
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.poppins(
+        color: const Color(0xFF111111),
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _buildActionStrip(BuildContext context, bool isTablet) {
+    return Row(
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: FlutterFlowTheme.of(context).primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: FlutterFlowTheme.of(context).primaryColor,
-            size: 24,
+        Expanded(
+          child: _buildActionChip(
+            icon: Icons.work_outline,
+            label: 'Active work',
+            count: _activeWorkCount,
+            color: const Color(0xFF06C698),
+            onTap: () => Navigator.pushNamed(context, '/active-work-list').then((_) => _refreshCounts()),
           ),
         ),
-        SizedBox(height: 8),
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            color: Color(0xFF111111),
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+        SizedBox(width: isTablet ? 14 : 10),
+        Expanded(
+          child: _buildActionChip(
+            icon: Icons.account_balance_wallet_outlined,
+            label: 'App Pocket',
+            count: null,
+            color: const Color(0xFF6C63FF),
+            onTap: () => Navigator.pushNamed(context, '/app-pocket'),
           ),
         ),
-        Text(
-          title,
-          style: GoogleFonts.poppins(
-            color: Color(0xFF666666),
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+        SizedBox(width: isTablet ? 14 : 10),
+        Expanded(
+          child: _buildActionChip(
+            icon: Icons.history_rounded,
+            label: 'Job history',
+            count: null,
+            color: Colors.deepOrange,
+            onTap: () => Navigator.pushNamed(context, '/job-history'),
           ),
-          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  Widget _buildBottomNavItem({
+  Widget _buildActionChip({
     required IconData icon,
     required String label,
+    required int? count,
+    required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: FlutterFlowTheme.of(context).secondaryText,
-            size: 24,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 0,
+      shadowColor: Colors.black.withOpacity(0.06),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
           ),
-          SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              color: FlutterFlowTheme.of(context).secondaryText,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(icon, color: color, size: 24),
+                  if (count != null && count > 0)
+                    Positioned(
+                      top: -6,
+                      right: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          count > 99 ? '99+' : '$count',
+                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF333333),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  // Load available jobhubs from API
+  Widget _buildGridTile({
+    required BuildContext context,
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 0,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 34),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF111111),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHubListSkeleton(bool isTablet) {
+    return SizedBox(
+      height: isTablet ? 172 : 164,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: 3,
+        separatorBuilder: (_, __) => SizedBox(width: isTablet ? 16 : 12),
+        itemBuilder: (_, __) => Container(
+          width: isTablet ? 200 : 180,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyHubCard(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Center(
+        child: Text(
+          message,
+          style: GoogleFonts.poppins(color: Colors.grey.shade600, fontSize: 14),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHubCard(Map<String, dynamic> item, bool isTablet) {
+    final jobhub = item['jobhub'];
+    final hubId = jobhub?.id as int?;
+    final cardWidth = isTablet ? 220 : 188;
+    return SizedBox(
+      width: cardWidth.toDouble(),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        elevation: 0,
+        child: InkWell(
+          onTap: hubId != null
+              ? () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) => HubDetailPage(hubId: hubId),
+                    ),
+                  )
+              : null,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: EdgeInsets.all(isTablet ? 16 : 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF06C698).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        item['icon'] as IconData,
+                        color: const Color(0xFF06C698),
+                        size: 20,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF06C698).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Available',
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF06C698),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  item['title'] as String,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF111111),
+                    fontSize: isTablet ? 15 : 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item['category'] as String,
+                  style: GoogleFonts.poppins(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+                const Spacer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.location_on_outlined, size: 14, color: const Color(0xFF06C698)),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              item['distance'] as String,
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFF06C698),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        item['payment'] as String,
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF111111),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavItem(IconData icon, String label, VoidCallback onTap, bool highlight, {int badgeCount = 0}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  icon,
+                  size: 26,
+                  color: highlight ? const Color(0xFF06C698) : Colors.grey.shade600,
+                ),
+                if (badgeCount > 0)
+                  Positioned(
+                    top: -4,
+                    right: -8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
+                      child: Text(
+                        badgeCount > 99 ? '99+' : '$badgeCount',
+                        style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: highlight ? const Color(0xFF06C698) : Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Load available jobhubs from API (sorted by distance, closest first)
   Future<List<dynamic>> _loadAvailableJobhubs() async {
     try {
-      // Get available jobhubs from API (status = 1)
-      final availableJobhubs = await JobhubService.getAvailableJobhubs();
-      
-      // Convert to the format expected by the UI
-      return availableJobhubs.map((jobhub) => {
-        'title': jobhub.title,
-        'category': jobhub.category,
-        'payment': jobhub.formattedPaymentAmount,
-        'distance': 'Nearby',
-        'icon': _getCategoryIcon(jobhub.category),
-        'status': 'Available',
-        'jobhub': jobhub, // Keep reference to original model
+      final user = context.read<AuthProvider>().currentUser;
+      double? lat = user?.latitude;
+      double? lng = user?.longitude;
+      // Use device location when user has no stored location so distance and sort still work
+      if (lat == null || lng == null) {
+        final position = await LocationTrackingService.getCurrentPosition();
+        if (position != null) {
+          lat = position.latitude;
+          lng = position.longitude;
+        }
+      }
+      final availableJobhubs = await HubRepository.getAvailableJobhubsSortedByDistance(lat, lng);
+
+      // Convert to the format expected by the UI; show distance when location available
+      return availableJobhubs.map((jobhub) {
+        String distanceText = 'Nearby';
+        if (lat != null && lng != null) {
+          final km = HubRepository.distanceKm(lat, lng, jobhub);
+          distanceText = '${km.toStringAsFixed(1)} km away';
+        }
+        return {
+          'title': jobhub.title,
+          'category': jobhub.category,
+          'payment': jobhub.formattedPaymentAmount,
+          'distance': distanceText,
+          'icon': _getCategoryIcon(jobhub.category),
+          'status': 'Available',
+          'jobhub': jobhub,
+        };
       }).toList();
     } catch (e) {
       print('Error loading available jobhubs: $e');
@@ -973,109 +1077,6 @@ class _HomePageState extends State<HomePage> with ResponsiveWidgetMixin {
       default:
         return Icons.work;
     }
-  }
-
-  // Build available jobhub card
-  Widget _buildAvailableJobhubCard(Map<String, dynamic> jobhub) {
-    return Container(
-      width: 200,
-      height: 140,
-      margin: EdgeInsets.only(right: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Color(0xFF06C698), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF989898),
-            offset: const Offset(4, 4),
-            blurRadius: 8,
-          ),
-          BoxShadow(
-            color: const Color(0xFFFFFFFF),
-            offset: const Offset(-4, -4),
-            blurRadius: 8,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF06C698),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    jobhub['icon'] as IconData,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    jobhub['status'] as String,
-                    style: GoogleFonts.poppins(
-                      color: Color(0xFF06C698),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-            Text(
-              jobhub['title'] as String,
-              maxLines: 2,
-              style: GoogleFonts.poppins(
-                color: Color(0xFF111111),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              jobhub['category'] as String,
-              style: GoogleFonts.poppins(
-                color: Color(0xFF666666),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  jobhub['distance'] as String,
-                  style: GoogleFonts.poppins(
-                    color: Color(0xFF06C698),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  jobhub['payment'] as String,
-                  style: GoogleFonts.poppins(
-                    color: Color(0xFF111111),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   ImageProvider _getProfileImage(String? profilePhoto) {

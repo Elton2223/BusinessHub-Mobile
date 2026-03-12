@@ -1,6 +1,6 @@
 class ApiConfig {
   // Base URL for the LoopBack4 API
-  static const String baseUrl = 'http://10.50.93.125:3005';
+  static const String baseUrl = 'http://172.20.224.1:3005';
 
   // API Endpoints
   static const String userManagementEndpoint = '/user-management';

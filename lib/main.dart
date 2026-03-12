@@ -10,8 +10,16 @@ import 'userManagement/profile_screen.dart';
 import 'home_page.dart';
 import 'hubs/hub_list.dart';
 import 'hubs/hub_apply.dart';
+import 'screens/notifications_screen.dart';
+import 'screens/hub_filter_settings_screen.dart';
+import 'screens/my_hubs_screen.dart';
+import 'screens/my_applications_screen.dart';
+import 'screens/active_work_list_screen.dart';
+import 'screens/job_history_screen.dart';
+import 'screens/accepted_hubs_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/app_pocket_screen.dart';
 import 'config/env_config.dart';
 import 'config/api_config.dart';
 import 'providers/auth_provider.dart';
@@ -68,8 +76,16 @@ class MyApp extends StatelessWidget {
           '/home': (context) => const HomePage(),
           '/hub-list': (context) => const HubListPage(),
           '/hub-apply': (context) => const HubApplyPage(),
+          '/notifications': (context) => const NotificationsScreen(),
+          '/hub-filters': (context) => const HubFilterSettingsScreen(),
+          '/my-hubs': (context) => const MyHubsScreen(),
+          '/my-applications': (context) => const MyApplicationsScreen(),
+          '/active-work-list': (context) => const ActiveWorkListScreen(),
+          '/accepted-hubs': (context) => const AcceptedHubsScreen(),
+          '/job-history': (context) => const JobHistoryScreen(),
           '/admin-dashboard': (context) => const AdminDashboardScreen(),
           '/settings': (context) => const SettingsScreen(),
+          '/app-pocket': (context) => const AppPocketScreen(),
           '/neumorphic-examples': (context) => const NeumorphicExamples(),
         },
       ),

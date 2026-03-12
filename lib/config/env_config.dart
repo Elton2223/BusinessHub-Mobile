@@ -127,7 +127,7 @@ class EnvConfig {
   // Development & Testing
   static String get testApiBaseUrl => get('TEST_API_BASE_URL', defaultValue: 'https://test-api.businesshub.com');
   static String get testDatabaseUrl => get('TEST_DATABASE_URL');
-  static bool get useMockData => getBool('USE_MOCK_DATA', defaultValue: false);
+  static bool get useMockData => getBool('USE_MOCK_DATA', defaultValue: true);
   static int get mockDelay => getInt('MOCK_DELAY', defaultValue: 1000);
 
   // Platform-specific Configuration

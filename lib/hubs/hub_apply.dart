@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
+import '../model/jobhub_model.dart';
+import '../services/hub_repository.dart';
+import 'hub_detail_page.dart';
 
 class HubApplyPage extends StatefulWidget {
   const HubApplyPage({super.key});
@@ -13,7 +16,10 @@ class HubApplyPage extends StatefulWidget {
 }
 
 class _HubApplyPageState extends State<HubApplyPage> {
-  int selectedFilter = 1;
+  int selectedFilter = 0; // 0 = All
+  List<JobhubModel> _hubs = [];
+  bool _loading = true;
+  String? _error;
 
   final List<String> categories = [
     'All',
@@ -25,6 +31,41 @@ class _HubApplyPageState extends State<HubApplyPage> {
     'Healthcare',
     'Finance'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadHubs());
+  }
+
+  Future<void> _loadHubs() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final list = await HubRepository.getAvailableJobhubs();
+      if (mounted) {
+        setState(() {
+          _hubs = list;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = e.toString();
+        });
+      }
+    }
+  }
+
+  List<JobhubModel> get _filteredHubs {
+    if (selectedFilter == 0) return _hubs;
+    final cat = categories[selectedFilter];
+    return _hubs.where((h) => h.category == cat).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,14 +145,14 @@ class _HubApplyPageState extends State<HubApplyPage> {
                         children: categories.asMap().entries.map((entry) {
                           final index = entry.key;
                           final category = entry.value;
-                          final isSelected = selectedFilter == index + 1;
+                          final isSelected = selectedFilter == index;
                           
                           return Padding(
                             padding: EdgeInsets.only(right: isTablet ? 16 : 12),
                             child: InkWell(
                               onTap: () {
                                 setState(() {
-                                  selectedFilter = index + 1;
+                                  selectedFilter = index;
                                 });
                               },
                               child: Container(
@@ -145,140 +186,64 @@ class _HubApplyPageState extends State<HubApplyPage> {
               
               // Hub Listings
               Expanded(
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: getCrossAxisCount(),
-                    crossAxisSpacing: isTablet ? 20 : 16,
-                    mainAxisSpacing: isTablet ? 20 : 16,
-                    childAspectRatio: getAspectRatio(),
-                  ),
-                  itemCount: 12,
-                  itemBuilder: (context, index) {
-                    return _buildHubCard(index, isTablet, isLaptop);
-                  },
-                ),
+                child: _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(_error!, textAlign: TextAlign.center, style: TextStyle(color: Colors.red)),
+                                SizedBox(height: 16),
+                                ElevatedButton(onPressed: _loadHubs, child: Text('Retry')),
+                              ],
+                            ),
+                          )
+                        : _filteredHubs.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'No hubs match the selected category.',
+                                  style: GoogleFonts.poppins(color: Colors.grey),
+                                ),
+                              )
+                            : GridView.builder(
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: getCrossAxisCount(),
+                                  crossAxisSpacing: isTablet ? 20 : 16,
+                                  mainAxisSpacing: isTablet ? 20 : 16,
+                                  childAspectRatio: getAspectRatio(),
+                                ),
+                                itemCount: _filteredHubs.length,
+                                itemBuilder: (context, index) {
+                                  return _buildHubCard(_filteredHubs[index], isTablet, isLaptop);
+                                },
+                              ),
               ),
             ],
           ),
         ),
       ),
-      floatingActionButton: isTablet 
-        ? FloatingActionButton.extended(
-            onPressed: () {
-              // Add new hub functionality
-            },
-            backgroundColor: Color(0xFF667eea),
-            icon: Icon(Icons.add, color: Colors.white),
-            label: Text(
-              'Add New Hub',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: isTablet ? 16 : 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          )
-        : FloatingActionButton(
-            onPressed: () {
-              // Add new hub functionality
-            },
-            backgroundColor: Color(0xFF667eea),
-            child: Icon(Icons.add, color: Colors.white),
-          ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.pushNamed(context, '/hub-list'),
+        backgroundColor: Color(0xFF667eea),
+        child: Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 
-  Widget _buildHubCard(int index, bool isTablet, bool isLaptop) {
-    final hubData = [
-      {
-        'title': 'Web Development',
-        'category': 'Technology',
-        'price': 'R2,500',
-        'location': 'Johannesburg',
-        'image': 'images/splash.jpeg',
+  Widget _buildHubCard(JobhubModel hub, bool isTablet, bool isLaptop) {
+    return InkWell(
+      onTap: () {
+        if (hub.id != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (context) => HubDetailPage(hubId: hub.id!),
+            ),
+          ).then((_) => _loadHubs());
+        }
       },
-      {
-        'title': 'Cleaning Services',
-        'category': 'Services',
-        'price': 'R800',
-        'location': 'Cape Town',
-        'image': 'images/splash.jpeg',
-      },
-      {
-        'title': 'Math Tutoring',
-        'category': 'Education',
-        'price': 'R300',
-        'location': 'Pretoria',
-        'image': 'images/splash.jpeg',
-      },
-      {
-        'title': 'Graphic Design',
-        'category': 'Creative',
-        'price': 'R1,200',
-        'location': 'Durban',
-        'image': 'images/splash.jpeg',
-      },
-      {
-        'title': 'Plumbing Work',
-        'category': 'Construction',
-        'price': 'R1,500',
-        'location': 'Johannesburg',
-        'image': 'images/splash.jpeg',
-      },
-      {
-        'title': 'Financial Consulting',
-        'category': 'Finance',
-        'price': 'R3,000',
-        'location': 'Cape Town',
-        'image': 'images/splash.jpeg',
-      },
-      {
-        'title': 'Mobile App Development',
-        'category': 'Technology',
-        'price': 'R4,500',
-        'location': 'Pretoria',
-        'image': 'images/splash.jpeg',
-      },
-      {
-        'title': 'Photography',
-        'category': 'Creative',
-        'price': 'R1,800',
-        'location': 'Durban',
-        'image': 'images/splash.jpeg',
-      },
-      {
-        'title': 'Medical Consultation',
-        'category': 'Healthcare',
-        'price': 'R2,200',
-        'location': 'Johannesburg',
-        'image': 'images/splash.jpeg',
-      },
-      {
-        'title': 'Electrical Work',
-        'category': 'Construction',
-        'price': 'R2,000',
-        'location': 'Cape Town',
-        'image': 'images/splash.jpeg',
-      },
-      {
-        'title': 'Language Teaching',
-        'category': 'Education',
-        'price': 'R400',
-        'location': 'Pretoria',
-        'image': 'images/splash.jpeg',
-      },
-      {
-        'title': 'Marketing Strategy',
-        'category': 'Services',
-        'price': 'R2,800',
-        'location': 'Durban',
-        'image': 'images/splash.jpeg',
-      },
-    ];
-
-    final hub = hubData[index % hubData.length];
-    
-    return Container(
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
@@ -294,7 +259,7 @@ class _HubApplyPageState extends State<HubApplyPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hub Image
+          // Hub Image / Icon
           Container(
             height: isLaptop ? 160 : (isTablet ? 140 : 120),
             width: double.infinity,
@@ -303,13 +268,16 @@ class _HubApplyPageState extends State<HubApplyPage> {
                 topLeft: Radius.circular(isTablet ? 16 : 12),
                 topRight: Radius.circular(isTablet ? 16 : 12),
               ),
-              image: DecorationImage(
-                image: AssetImage(hub['image']!),
-                fit: BoxFit.cover,
-              ),
+              color: Color(0xFF667eea).withOpacity(0.15),
             ),
             child: Stack(
               children: [
+                Center(
+                  child: Text(
+                    hub.categoryIcon,
+                    style: TextStyle(fontSize: isTablet ? 48 : 40),
+                  ),
+                ),
                 Positioned(
                   top: isTablet ? 10 : 8,
                   right: isTablet ? 10 : 8,
@@ -323,7 +291,7 @@ class _HubApplyPageState extends State<HubApplyPage> {
                       borderRadius: BorderRadius.circular(isTablet ? 14 : 12),
                     ),
                     child: Text(
-                      hub['category']!,
+                      hub.category,
                       style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: isTablet ? 12 : 10,
@@ -344,7 +312,7 @@ class _HubApplyPageState extends State<HubApplyPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    hub['title']!,
+                    hub.title,
                     style: GoogleFonts.poppins(
                       color: Color(0xFF111111),
                       fontSize: isTablet ? 18 : 16,
@@ -364,7 +332,7 @@ class _HubApplyPageState extends State<HubApplyPage> {
                       SizedBox(width: isTablet ? 6 : 4),
                       Expanded(
                         child: Text(
-                          hub['location']!,
+                          hub.city,
                           style: GoogleFonts.poppins(
                             color: Color(0xFF666666),
                             fontSize: isTablet ? 14 : 12,
@@ -389,7 +357,7 @@ class _HubApplyPageState extends State<HubApplyPage> {
                         ),
                       ),
                       Text(
-                        hub['price']!,
+                        hub.formattedPaymentAmount,
                         style: GoogleFonts.poppins(
                           color: Color(0xFF111111),
                           fontSize: isTablet ? 18 : 16,
@@ -403,7 +371,14 @@ class _HubApplyPageState extends State<HubApplyPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Apply for hub functionality
+                        if (hub.id != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (context) => HubDetailPage(hubId: hub.id!),
+                            ),
+                          ).then((_) => _loadHubs());
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF2C2C2C),
@@ -429,6 +404,7 @@ class _HubApplyPageState extends State<HubApplyPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

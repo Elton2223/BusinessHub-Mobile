@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/env_config.dart';
+import '../data/dummy_hub_data.dart';
 import '../services/api_service.dart';
 import '../model/user_model.dart';
 
@@ -148,6 +150,13 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Dummy credentials for testing employer vs worker flow (when [EnvConfig.useMockData] is true).
+  /// Employer: employer@businesshub.com / Test123!
+  /// Worker:  worker@businesshub.com / Test123!
+  static const String _dummyEmployerEmail = 'employer@businesshub.com';
+  static const String _dummyWorkerEmail = 'worker@businesshub.com';
+  static const String _dummyPassword = 'Test123!';
+
   // Login user
   Future<bool> login({
     required String email,
@@ -159,6 +168,29 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       print('🔍 AuthProvider: Starting login for email: $email');
+
+      // When using mock data, allow two dummy logins for testing employer vs worker
+      if (EnvConfig.useMockData) {
+        final emailTrimmed = email.trim().toLowerCase();
+        final passwordOk = password == _dummyPassword;
+        if (passwordOk && emailTrimmed == _dummyEmployerEmail) {
+          _currentUser = _buildDummyUser('1', _dummyEmployerEmail);
+          _isLoading = false;
+          await _saveUserSession(_currentUser!);
+          _errorMessage = null;
+          notifyListeners();
+          return true;
+        }
+        if (passwordOk && emailTrimmed == _dummyWorkerEmail) {
+          _currentUser = _buildDummyUser('2', _dummyWorkerEmail);
+          _isLoading = false;
+          await _saveUserSession(_currentUser!);
+          _errorMessage = null;
+          notifyListeners();
+          return true;
+        }
+      }
+
       final result = await ApiService.loginUser(
         email: email,
         password: password,
@@ -193,9 +225,53 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Dummy users are built without location so the app will prompt for location after login.
+  UserModel _buildDummyUser(String id, String email) {
+    final profile = DummyHubData.getDummyUser(id);
+    return UserModel(
+      id: id,
+      name: profile?['name']?.toString(),
+      surname: profile?['surname']?.toString(),
+      email: email,
+      city: profile?['city']?.toString(),
+      latitude: null,
+      longitude: null,
+      isAdmin: false,
+    );
+  }
+
+  /// Update current user's location (e.g. after permission granted). Persists to session.
+  Future<void> updateUserLocation(double latitude, double longitude) async {
+    if (_currentUser == null) return;
+    final u = _currentUser!;
+    _currentUser = UserModel(
+      id: u.id,
+      name: u.name,
+      surname: u.surname,
+      email: u.email,
+      profilePhoto: u.profilePhoto,
+      ratings: u.ratings,
+      phoneNumber: u.phoneNumber,
+      streetAddress: u.streetAddress,
+      city: u.city,
+      state: u.state,
+      postalCode: u.postalCode,
+      country: u.country,
+      identificationDoc: u.identificationDoc,
+      latitude: latitude,
+      longitude: longitude,
+      password: u.password,
+      isAdmin: u.isAdmin,
+    );
+    await _saveUserSession(_currentUser!);
+    notifyListeners();
+  }
+
   // Logout user
   Future<void> logout() async {
-    await ApiService.logout();
+    final isDummy = EnvConfig.useMockData &&
+        (_currentUser?.email == _dummyEmployerEmail || _currentUser?.email == _dummyWorkerEmail);
+    if (!isDummy) await ApiService.logout();
     _currentUser = null;
     _errorMessage = null;
     await _clearUserSession();
@@ -209,8 +285,15 @@ class AuthProvider extends ChangeNotifier {
     // First try to restore from local storage
     await _restoreUserSession();
     
-    // If we have a user from local storage, try to validate with API
+    // If we have a user from local storage, try to validate with API (skip for dummy test users)
     if (_currentUser != null) {
+      final isDummyUser = EnvConfig.useMockData &&
+          (_currentUser!.email == _dummyEmployerEmail || _currentUser!.email == _dummyWorkerEmail);
+      if (isDummyUser) {
+        print('🔍 AuthProvider: Dummy user restored from storage, skipping API validation');
+        notifyListeners();
+        return;
+      }
       print('🔍 AuthProvider: User found in local storage, validating with API...');
       try {
         final isLoggedIn = await ApiService.isLoggedIn();

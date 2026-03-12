@@ -34,39 +34,35 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.all(isTablet ? 24 : 16),
         children: [
-          _buildSectionHeader(context, 'Account'),
-          _buildSettingsTile(
-            context,
-            icon: Icons.person_outline,
-            title: 'Edit profile',
-            subtitle: 'Update your personal information',
-            onTap: () => Navigator.pushNamed(context, '/profile'),
-          ),
-          _buildSettingsTile(
-            context,
-            icon: Icons.lock_outline,
-            title: 'Change password',
-            subtitle: 'Update your password',
-            onTap: () {
-              // TODO: Navigate to change password
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Change password – coming soon')),
-              );
-            },
-          ),
+          // _buildSectionHeader(context, 'Account'),
+          // _buildSettingsTile(
+          //   context,
+          //   icon: Icons.lock_outline,
+          //   title: 'Change password',
+          //   subtitle: 'Update your password',
+          //   onTap: () {
+          //     // TODO: Navigate to change password
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(content: Text('Change password – coming soon')),
+          //     );
+          //   },
+          // ),
           const SizedBox(height: 24),
           _buildSectionHeader(context, 'Preferences'),
           _buildSettingsTile(
             context,
-            icon: Icons.notifications_outlined,
-            title: 'Notifications',
-            subtitle: 'Manage notification preferences',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notifications – coming soon')),
-              );
-            },
+            icon: Icons.tune,
+            title: 'Hub filters',
+            subtitle: 'Location range, area, category, ongoing hubs',
+            onTap: () => Navigator.pushNamed(context, '/hub-filters'),
           ),
+          // _buildSettingsTile(
+          //   context,
+          //   icon: Icons.notifications_outlined,
+          //   title: 'Notifications',
+          //   subtitle: 'Manage notification preferences',
+          //   onTap: () => Navigator.pushNamed(context, '/notifications'),
+          // ),
           _buildSettingsTile(
             context,
             icon: Icons.language,
